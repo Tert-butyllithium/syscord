@@ -38,6 +38,6 @@ Note: because of the constraint of Linux, we will only compare the first 15 char
 
 ## TO-DO List
 
--[ ] record parameter changes for all types of syscall
--[ ] capture interrupt...
--[ ] using buffer instead of outputing to `dmesg`
+- [ ] record parameter changes for all types of syscall
+- [ ] capture interrupt...
+- [ ] using buffer instead of outputing to `dmesg`
