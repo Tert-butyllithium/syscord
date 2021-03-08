@@ -29,9 +29,15 @@ Then you could run `dmesg -w` to find all syscall logs.
 
 
 
-## Filter condition
+### Filter condition
 
 - `pid`: `insmod my_sysdig.ko pid=1234`
 - `proc_name`: `insmod my_sysdig.ko proc_name=test_syscall`
 
 Note: because of the constraint of Linux, we will only compare the first 15 characters of `proc_name`
+
+## TO-DO List
+
+-[ ] record parameter changes for all types of syscall
+-[ ] capture interrupt...
+-[ ] using buffer instead of outputing to `dmesg`
