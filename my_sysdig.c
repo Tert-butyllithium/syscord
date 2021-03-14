@@ -29,8 +29,10 @@ module_param(proc_name, charp, 0000);
 unsigned long long get_syscall_res(struct pt_regs *regs) {
 #ifdef CONFIG_X86
   return regs->ax;
-#else
+#elif defined(CONFIG_ARM64)
   return regs->regs[0];
+#elif defined(CONFIG_RISCV)
+  return regs->a0;
 #endif
 }
 
