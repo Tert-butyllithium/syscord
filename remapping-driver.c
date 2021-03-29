@@ -17,7 +17,7 @@
 #define PAGE_ORDER 2
 /* this value can get from PAGE_ORDER */
 #define PAGES_NUMBER 4
-#define BUF_SIZE (1024 * PAGES_NUMBER)
+#define BUF_SIZE (1024)
 
 struct proc_dir_entry *proc_memshare_dir;
 unsigned long kernel_memaddr = 0;
@@ -57,20 +57,22 @@ static const struct file_operations proc_mmap_fops = {.owner = THIS_MODULE,
                                                       .mmap = proc_mmap};
 
 static void write_something(const char *src, int *offset) {
-  char *buffer_addr = (void *)kernel_memaddr;
-  printk("%s",src);
-  unsigned long str_len = strlen(src) + 1;
-  unsigned long str_end = (*offset) + str_len;
-  printk("writing something... from %d with len %lu", *offset, str_len);
-  if (str_end >= BUF_SIZE) {
-    strncpy(buffer_addr + (*offset), src, BUF_SIZE - (*offset));
-    strncpy(buffer_addr, src, str_end - BUF_SIZE);
-    *offset = str_end - BUF_SIZE;
-  } else {
-    strncpy(buffer_addr + (*offset), src, str_len);
-    *offset = (*offset) + str_len;
-  }
+    char *buffer_addr = kernel_memaddr;
+    unsigned long str_len = strlen(src) + 1;
+    unsigned long str_end = (*offset) + str_len;
+    unsigned long cut_length;
+    // printk("writing something... from %d with len %lu\n", *offset, str_len);
+    if (str_end >= BUF_SIZE) {
+        cut_length = BUF_SIZE - (*offset);
+        strncpy(buffer_addr + (*offset), src, cut_length);
+        strncpy(buffer_addr, src + cut_length, str_end - BUF_SIZE);
+        *offset = str_end % BUF_SIZE;
+    } else {
+        strncpy(buffer_addr + (*offset), src, str_len);
+        *offset = str_end % BUF_SIZE;
+    }
 }
+
 
 static int init_remapping(void) {
   /* build proc dir "memshare"and two proc files: phymem_addr, phymem_size in
