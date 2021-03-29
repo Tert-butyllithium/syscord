@@ -12,7 +12,13 @@
 #include <linux/tracepoint.h>
 #include <trace/events/syscalls.h>
 
+static int pid = 0;
+module_param(pid, int, 0600);
+static char *proc_name = "";
+module_param(proc_name, charp, 0660);
+
 #include "proc_filter.h"
+#include "remapping-driver.c"
 
 #define _DEBUG_LANRAN_
 
@@ -21,10 +27,8 @@ MODULE_AUTHOR("Huana Liu");
 MODULE_DESCRIPTION("A Linux kenrel module for capturing syscalls");
 MODULE_VERSION("0.01");
 
-static int pid = 0;
-static char *proc_name = "";
-module_param(pid, int, 0644);
-module_param(proc_name, charp, 0000);
+
+int buf_offset = 0;
 
 unsigned long long get_syscall_res(struct pt_regs *regs) {
 #ifdef CONFIG_X86
@@ -47,9 +51,12 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
-
-  printk("[my_sysdig:] syscall 0x%lx, with pid=0x%x, name=%s", id, current->pid,
-         name);
+  char small_buf[256];
+  memset(small_buf,0,sizeof small_buf);
+  
+  sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s", id, current->pid,
+          name);
+  write_something(small_buf, &buf_offset);
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
@@ -58,10 +65,13 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     return;
   }
 
-  printk(
-      "[my_sysdig:] exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx, "
-      "name=%s",
-      get_syscall_res(regs), current->pid, ret, name);
+  char small_buf[256];
+  memset(small_buf,0,sizeof small_buf);
+  
+  sprintf(small_buf,
+          "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx,name=%s",
+          get_syscall_res(regs), current->pid, ret, name);
+  write_something(small_buf, &buf_offset);
 }
 /**
  * Data structures to store tracepoints informations
@@ -107,12 +117,16 @@ static void cleanup(void) {
 }
 
 static void __exit my_sysdig_exit(void) {
-    cleanup();
-    printk("[my_sysdig:] remove my_sysdig successfully");
+  cleanup();
+  dump_buffer();
+  exit_remapping();
+  printk("[my_sysdig:] remove my_sysdig successfully");
 }
 
 static int __init my_sysdig_init(void) {
   int i;
+  // buffer init
+  init_remapping();
 
   // Install the tracepoints
   for_each_kernel_tracepoint(lookup_tracepoints, NULL);
