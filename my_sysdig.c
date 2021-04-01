@@ -27,7 +27,8 @@ MODULE_AUTHOR("Huana Liu");
 MODULE_DESCRIPTION("A Linux kenrel module for capturing syscalls");
 MODULE_VERSION("0.01");
 
-
+char small_buf[256];
+spinlock_t small_buf_lock;
 int buf_offset = 0;
 
 unsigned long long get_syscall_res(struct pt_regs *regs) {
@@ -49,10 +50,9 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
-  char small_buf[256];
-  memset(small_buf,0,sizeof small_buf);
-  
-  sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s", id, current->pid,
+  spin_lock_irq(&small_buf_lock);
+  // memset(small_buf,0,sizeof small_buf);
+  sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s\0", id, current->pid,
           name);
   write_something(small_buf, &buf_offset);
 }
@@ -63,13 +63,14 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     return;
   }
 
-  char small_buf[256];
-  memset(small_buf,0,sizeof small_buf);
+  spin_lock_irq(&small_buf_lock);
+  // memset(small_buf,0,sizeof small_buf);
   
   sprintf(small_buf,
           "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx,name=%s",
           get_syscall_res(regs), current->pid, ret, name);
   write_something(small_buf, &buf_offset);
+  spin_unlock_irq(&small_buf_lock);
 }
 /**
  * Data structures to store tracepoints informations
@@ -125,6 +126,7 @@ static int __init my_sysdig_init(void) {
   int i;
   // buffer init
   init_remapping();
+  spin_lock_init(&small_buf_lock);
 
   // Install the tracepoints
   for_each_kernel_tracepoint(lookup_tracepoints, NULL);

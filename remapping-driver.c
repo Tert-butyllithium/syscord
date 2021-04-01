@@ -57,20 +57,16 @@ static const struct file_operations proc_mmap_fops = {.owner = THIS_MODULE,
                                                       .mmap = proc_mmap};
 
 static void write_something(const char *src, int *offset) {
-    char *buffer_addr = kernel_memaddr;
-    unsigned long str_len = strlen(src) + 1;
-    unsigned long str_end = (*offset) + str_len;
-    unsigned long cut_length;
-    // printk("writing something... from %d with len %lu\n", *offset, str_len);
-    if (str_end >= BUF_SIZE) {
-        cut_length = BUF_SIZE - (*offset);
-        strncpy(buffer_addr + (*offset), src, cut_length);
-        strncpy(buffer_addr, src + cut_length, str_end - BUF_SIZE);
-        *offset = str_end % BUF_SIZE;
-    } else {
-        strncpy(buffer_addr + (*offset), src, str_len);
-        *offset = str_end % BUF_SIZE;
-    }
+  char *buffer_addr = kernel_memaddr;
+  unsigned long str_len = strlen(src) + 1;
+  unsigned long str_end = (*offset) + str_len;
+
+  if(str_end > BUF_SIZE){
+    *offset = 0;
+    str_end = str_len;
+  }
+  strncpy(buffer_addr + (*offset), src, str_len);
+  *offset = str_end;
 }
 
 
