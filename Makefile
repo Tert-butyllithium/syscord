@@ -10,7 +10,7 @@ default:
 unload:
 	sudo rmmod ./my_sysdig.ko
 load:
-	sudo insmod  ./my_sysdig.ko
+	sudo insmod  ./my_sysdig.ko proc_name=nginx
 
 reload: unload load
 
