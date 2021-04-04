@@ -4,12 +4,21 @@
 #include <linux/buffer_head.h>
 #include <linux/device.h>
 #include <linux/fs.h>
+#include <linux/mutex.h>
+#define WRITE_FILE_LOCK() mutex_lock_interruptible(&file_write_mutex)
+#define WRITE_FILE_UNLOCK() mutex_unlock(&file_write_mutex)
 static struct file* __file_to_record = NULL;
+struct mutex file_write_mutex;
+
 
 struct file* file_open(const char* path, int flags, int rights) {
+
   struct file* filp = NULL;
   mm_segment_t oldfs;
   int err = 0;
+
+  // init mutex for write file
+  mutex_init(&file_write_mutex);
 
   oldfs = get_fs();
   set_fs(get_ds());

@@ -7,8 +7,9 @@
 #include <linux/time.h>
 #include <linux/tracepoint.h>
 #include <trace/events/syscalls.h>
-#include "record-buffer.h"
+
 #include "proc-filter.h"
+#include "record-buffer.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
 spinlock_t small_buf_lock;
@@ -32,10 +33,10 @@ unsigned long long get_syscall_res(struct pt_regs *regs) {
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   char *name = get_process_name();
   unsigned long len;
+  char small_buf[128];
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
-  char small_buf[128];
 
   // memset(small_buf,0,sizeof small_buf);
 
@@ -45,7 +46,11 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   len = strlen(small_buf);
   if (!check_offset(len)) {
     // dump to file
-    dump_to_file();
+    WRITE_FILE_LOCK();
+    if (!check_offset(len)) {
+      dump_to_file();
+    }
+     WRITE_FILE_UNLOCK();
   }
 
 #ifdef ENABLE_LOCK
@@ -62,10 +67,10 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   char *name = get_process_name();
   unsigned long len;
+  char small_buf[128];
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
-  char small_buf[128];
 
   // memset(small_buf,0,sizeof small_buf);
 
@@ -75,7 +80,11 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   len = strlen(small_buf);
   if (!check_offset(len)) {
     // dump to file
-    dump_to_file();
+    WRITE_FILE_LOCK();
+    if (!check_offset(len)) {
+      dump_to_file();
+    }
+    WRITE_FILE_UNLOCK();
   }
 
 #ifdef ENABLE_LOCK
@@ -154,8 +163,8 @@ static void register_syscall_hook(void) {
 //   // Cleanup the tracepoints
 //   FOR_EACH_INTEREST(i) {
 //     if (interests[i].init) {
-//       tracepoint_probe_unregister(interests[i].value, interests[i].fct, NULL);
-//       tracepoint_synchronize_unregister();
+//       tracepoint_probe_unregister(interests[i].value, interests[i].fct,
+//       NULL); tracepoint_synchronize_unregister();
 //     }
 //   }
 // }

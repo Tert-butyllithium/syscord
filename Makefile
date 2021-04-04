@@ -8,7 +8,7 @@ PWD := $(shell pwd)
 default:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 unload:
-	sudo rmmod ./my_sysdig.ko
+	sudo rmmod my_sysdig
 load:
 	sudo insmod  ./my_sysdig.ko proc_name=nginx
 
