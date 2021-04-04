@@ -30,20 +30,12 @@ static bool check_offset(unsigned long str_len) {
 }
 
 static void dump_to_file(void) {
-  // definitely needs a lock...
-
-  // lock start
-  // WRITE_FILE_LOCK();
-
+  // definitely needs a lock when call it...
   printk(
       "it is time to dump records to file with offset: %ld, current stat: %lld",
       real_offset, syscall_count);
-  // unregister_syscall_hook();
   save_to_file(real_buffer, real_offset);
   real_offset = 0;
-
-  // lock end
-  // WRITE_FILE_UNLOCK();
 }
 
 static void write_something_to_buffer(const char* src,
@@ -53,33 +45,7 @@ static void write_something_to_buffer(const char* src,
   real_offset = offset_end;
 }
 
-// static void write_something(const char *src, u64 *__offset) {
-//   unsigned long str_len = strlen(src);
-//   unsigned long offset_end = real_offset + str_len;
-
-//   if (offset_end >= BUF_SIZE) {
-//     printk("it is time to dump records to file");
-//     // unregister_syscall_hook();
-//     save_to_file(real_buffer, real_offset);
-//     // register_syscall_hook();
-//     real_offset = 0;
-//     offset_end = str_len;
-//     memset(real_buffer, 0, BUF_SIZE);
-//   }
-//   strncpy(real_buffer + real_offset, src, str_len);
-//   real_offset = offset_end;
-// }
-
-// static int init_remapping(void) {
-//   return 0;
-// }
-
-// static void exit_remapping(void) {
-//   return;
-// }
-
 static void dump_buffer(void) {
-  // char tmp_buf[128];
   unsigned long offset = 0;
   unsigned long a;
   while (1) {

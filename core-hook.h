@@ -38,14 +38,12 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
     return;
   }
 
-  // memset(small_buf,0,sizeof small_buf);
-
   sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s\n", id,
           current->pid, name);
-  // write_something(small_buf, &buf_offset);
   len = strlen(small_buf);
   if (!check_offset(len)) {
     // dump to file
+    // double check (and lock the inner one) to minimize the influence  
     WRITE_FILE_LOCK();
     if (!check_offset(len)) {
       dump_to_file();
@@ -72,7 +70,6 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     return;
   }
 
-  // memset(small_buf,0,sizeof small_buf);
 
   sprintf(small_buf,
           "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx, name=%s\n",
@@ -80,6 +77,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   len = strlen(small_buf);
   if (!check_offset(len)) {
     // dump to file
+    // same procedure with `syscall_enter`, need optimize
     WRITE_FILE_LOCK();
     if (!check_offset(len)) {
       dump_to_file();
@@ -150,23 +148,11 @@ static void register_syscall_hook(void) {
       printk("Error, %s not found\n", interests[i].name);
       // Unload previously loaded
       cleanup();
-      // return -1;
     }
     interests[i].init = 1;
     tracepoint_probe_register(interests[i].value, interests[i].fct, NULL);
   }
 }
 
-// static void unregister_syscall_hook(void) {
-//   int i;
-
-//   // Cleanup the tracepoints
-//   FOR_EACH_INTEREST(i) {
-//     if (interests[i].init) {
-//       tracepoint_probe_unregister(interests[i].value, interests[i].fct,
-//       NULL); tracepoint_synchronize_unregister();
-//     }
-//   }
-// }
 
 #endif

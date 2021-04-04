@@ -2,17 +2,19 @@
 
 > The *goal* of this project is to create another `sysdig` ~~(although impossible)~~
 
-Sysdig is an awesome tool for capturing syscalls; however, it was intentionally developed for `x86_64` platform and not very suitable for `arm` devices (especially for developing board without package manager)
+[Sysdig](https://github.com/draios/sysdig) is an awesome tool for capturing syscalls; however, it is too complex and not very suitable for `arm` devices (especially for developing board without package manager)
 
-`My sysdig` aims to provide limited features to minimize dependencies and overhead (But lack of relevant tests)
+In our test (the same evluation environment as **Performance Evaluation**), the overall overhead could reach up to **15%**!!!
 
-> WARNING: This is developing project and all functions haven't been tested. 
+`My sysdig` aims to provide limited features to minimize dependencies and overhead
+
+> WARNING: Mysysdig is a developing project and all functions have not been fully tested.
 
 ## User Manual 
 
 Basically, you can `make` to compile the driver and then `insmod my_sysdig.ko` to install the kernel module. 
 
-Then you could open file `/etc/syscall-record/record` to find all syscall logs. 
+Then you could open file `/etc/syscall-record/record` to find all syscall logs. (You might need to create the directory and delete the file before run)
 
 ```bash
 syscall 0x0, with pid=0xc36, name=dmesg
