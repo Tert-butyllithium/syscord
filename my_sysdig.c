@@ -1,5 +1,3 @@
-// reference: https://gist.github.com/HugoGuiroux/0894091275169750d22f
-// reference: sysdig
 #include <asm/current.h>
 #include <linux/ftrace.h>
 #include <linux/module.h>
@@ -16,8 +14,9 @@ module_param(pid, int, 0600);
 static char *proc_name = "";
 module_param(proc_name, charp, 0660);
 
-#include "proc_filter.h"
-#include "remapping-driver.c"
+// #include "proc-filter.h"
+// #include "dump-file.h"
+// #include "record-buffer.h"
 #include "core-hook.h"
 
 #define _DEBUG_LANRAN_
@@ -32,8 +31,9 @@ static void __exit my_sysdig_exit(void) {
   // dump_buffer();
   printk("statistics: %llu\n", syscall_count);
   printk("saving to file...with length: %lu",real_offset);
-  save_to_file(real_buffer, real_offset);
-  exit_remapping();
+  // save_to_file(real_buffer, real_offset);
+  // exit_remapping();
+  dump_to_file();
   cleanup();
   close_record_file();
   printk("[my_sysdig:] remove my_sysdig successfully");
@@ -42,7 +42,7 @@ static void __exit my_sysdig_exit(void) {
 static int __init my_sysdig_init(void) {
   // int i;
   // buffer init
-  init_remapping();
+  // init_remapping();
   open_record_file("/etc/syscall-record/record");
   spin_lock_init(&small_buf_lock);
 

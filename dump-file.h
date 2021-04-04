@@ -1,5 +1,5 @@
-#ifndef DUMP_FILE_H
-#define DUMP_FILE_H
+#ifndef _MYSISDIG_DUMP_FILE_H
+#define _MYSISDIG_DUMP_FILE_H
 #include <asm/io.h>
 #include <linux/buffer_head.h>
 #include <linux/device.h>
@@ -29,7 +29,7 @@ static void open_record_file(const char* file_name) {
   __file_to_record = file_open(file_name, O_RDWR | O_CREAT, S_IRWXU);
 }
 
-int file_write(struct file* file, unsigned char* data, unsigned int size) {
+int file_write(struct file* file, const char* data, unsigned int size) {
   mm_segment_t oldfs;
   int ret;
 
