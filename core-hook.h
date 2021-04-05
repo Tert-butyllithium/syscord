@@ -11,6 +11,7 @@
 #include "data-structure/hashtable.h"
 #include "proc-filter.h"
 #include "record-buffer.h"
+#include "syscalls/arch.h"
 #include "syscalls/handlers.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
@@ -25,9 +26,9 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id);
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret);
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
-  char *name = get_process_name();
-  unsigned long len;
-  char small_buf[128];
+  // char *name = get_process_name();
+  // unsigned long len;
+  // char small_buf[128];
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
@@ -50,7 +51,7 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 #endif
   // write_something_to_buffer(small_buf, len);
   hashtable_put(&proc_arg0_hash_table, current->pid,
-                (HASH_TABLE_ENTER){get_syscall_no(regs), get_arg0(regs)});
+                (HASH_TABLE_ENTER){id, get_arg0(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
   spin_unlock_irq(&small_buf_lock);
@@ -58,16 +59,32 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
+  unsigned long syscall_no=114514, arg0=114514;
+  HASH_TABLE_ENTER *record = NULL;
   char *name = get_process_name();
   unsigned long len;
-  char small_buf[128];
+  char small_buf[300];
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
 
-  sprintf(small_buf,
-          "exit syscall, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
-          get_syscall_res(regs), current->pid, ret, name);
+#ifdef ENABLE_LOCK
+  spin_lock_irq(&small_buf_lock);
+#endif
+  // get the info from hash table
+  record = hashtable_get(&proc_arg0_hash_table, current->pid);
+  if(record){
+    syscall_no = record->no;
+    arg0 = record->arg0;
+  }
+  hashtable_delete(&proc_arg0_hash_table, current->pid);
+#ifdef ENABLE_LOCK
+  spin_unlock_irq(&small_buf_lock);
+#endif
+  gen_record_str(small_buf, regs, syscall_no, arg0);
+  // sprintf(small_buf,
+  //         "pid=%d, %s, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
+  //         get_syscall_res(regs), current->pid, ret, name);
   len = strlen(small_buf);
   if (!check_offset(len)) {
     // dump to file

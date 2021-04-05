@@ -47,7 +47,7 @@ int __hashtable_next_pos(struct hashtable *);
 int hashtable_put(struct hashtable *_hashtable, int key,
                   HASH_TABLE_ENTER value) {
   int next_pos;
-  if (hashtable_get(_hashtable, key) == NULL) return -1;
+  if (hashtable_get(_hashtable, key) != NULL) return -1;
   next_pos = __hashtable_next_pos(_hashtable);
   if (next_pos < 0) {
     // error!!!
