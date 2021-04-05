@@ -11,6 +11,7 @@
 #include "data-structure/hashtable.h"
 #include "proc-filter.h"
 #include "record-buffer.h"
+#include "syscalls/handlers.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
 spinlock_t small_buf_lock;
@@ -22,19 +23,6 @@ extern char *proc_name;
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id);
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret);
-// TRACEPOINT_PROBE(syscall_procexit_probe, struct task_struct *p);
-
-unsigned long long get_syscall_res(struct pt_regs *regs) {
-#ifdef CONFIG_X86
-  return regs->ax;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[0];
-#elif defined(CONFIG_RISCV)
-  return regs->a0;
-#else
-  return -1;
-#endif
-}
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   char *name = get_process_name();
@@ -61,7 +49,8 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   spin_lock_irq(&small_buf_lock);
 #endif
   // write_something_to_buffer(small_buf, len);
-  
+  hashtable_put(&proc_arg0_hash_table, current->pid,
+                (HASH_TABLE_ENTER){get_syscall_no(regs), get_arg0(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
   spin_unlock_irq(&small_buf_lock);
@@ -77,7 +66,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   }
 
   sprintf(small_buf,
-          "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx, name=%s\n",
+          "exit syscall, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
           get_syscall_res(regs), current->pid, ret, name);
   len = strlen(small_buf);
   if (!check_offset(len)) {

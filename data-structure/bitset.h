@@ -1,6 +1,6 @@
 #ifndef MYSYSDIG_DS_BITSET_H
 #define MYSYSDIG_DS_BITSET_H
-#include <string.h>
+
 // this 30 represent 30*64 = 1920;
 #define BITSET_MAXN 30
 #define BITSET_MAXM 30
