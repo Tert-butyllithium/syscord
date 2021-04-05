@@ -16,8 +16,10 @@
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
 spinlock_t small_buf_lock;
+spinlock_t hashtable_lock;
 u64 buf_offset = 0;
 u64 syscall_count = 0;
+char small_buf[512];
 struct hashtable proc_arg0_hash_table;
 extern int pid;
 extern char *proc_name;
@@ -47,41 +49,57 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   //   }
 
 #ifdef ENABLE_LOCK
-  spin_lock_irq(&small_buf_lock);
+  spin_lock_irq(&hashtable_lock);
 #endif
   // write_something_to_buffer(small_buf, len);
   hashtable_put(&proc_arg0_hash_table, current->pid,
                 (HASH_TABLE_ENTER){id, get_arg0(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
-  spin_unlock_irq(&small_buf_lock);
+  spin_unlock_irq(&hashtable_lock);
 #endif
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
-  unsigned long syscall_no=114514, arg0=114514;
+  unsigned long syscall_no = 114514, arg0 = 114514;
   HASH_TABLE_ENTER *record = NULL;
-  char *name = get_process_name();
+  // char *name = get_process_name();
   unsigned long len;
-  char small_buf[300];
+
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
 
-#ifdef ENABLE_LOCK
-  spin_lock_irq(&small_buf_lock);
-#endif
+// #ifdef ENABLE_LOCK
+//   spin_lock_irq(&small_buf_lock);
+// #endif
   // get the info from hash table
   record = hashtable_get(&proc_arg0_hash_table, current->pid);
-  if(record){
+  if (record) {
     syscall_no = record->no;
     arg0 = record->arg0;
   }
   hashtable_delete(&proc_arg0_hash_table, current->pid);
-#ifdef ENABLE_LOCK
-  spin_unlock_irq(&small_buf_lock);
-#endif
-  gen_record_str(small_buf, regs, syscall_no, arg0);
+  // gen_record_str(small_buf, regs, syscall_no, arg0);
+
+
+  unsigned long res = get_syscall_res(regs);
+  unsigned long arg1 = get_arg1(regs);
+  unsigned long arg2 = get_arg2(regs);
+  unsigned long arg3 = get_arg3(regs);
+  unsigned long arg4 = get_arg4(regs);
+  unsigned long arg5 = get_arg5(regs);
+  sprintf(small_buf,
+          "pid=%d, %s, ret=0x%lx, arg0=0x%lx, arg1=0x%lx, arg2=0x%lx, "
+          "arg3=0x%lx ,arg4=0x%lx, arg5=0x%lx, name=%s\n",
+          current->pid, syscall_id_to_name[syscall_no], res, arg0, arg1, arg2,
+          arg3, arg4, arg5, current->comm);
+     printk("%s",small_buf);
+// #ifdef ENABLE_LOCK
+//   spin_unlock_irq(&small_buf_lock);
+// #endif
+  // memset(small_buf,0,300);
+
   // sprintf(small_buf,
   //         "pid=%d, %s, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
   //         get_syscall_res(regs), current->pid, ret, name);

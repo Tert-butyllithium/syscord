@@ -2,7 +2,7 @@
 #define _MYSYSDIG_HANDLERS_H
 #include <asm/ptrace.h>
 
-unsigned long get_arg0(struct pt_regs* regs) {
+inline unsigned long get_arg0(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->di;
 #elif defined(CONFIG_ARM64)
@@ -14,7 +14,7 @@ unsigned long get_arg0(struct pt_regs* regs) {
 #endif
 }
 
-int get_syscall_no(struct pt_regs* regs) {
+inline int get_syscall_no(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->ax;
 #elif defined(CONFIG_ARM64)
@@ -26,7 +26,7 @@ int get_syscall_no(struct pt_regs* regs) {
 #endif
 }
 
-unsigned long get_syscall_res(struct pt_regs* regs) {
+inline unsigned long get_syscall_res(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->ax;
 #elif defined(CONFIG_ARM64)
@@ -38,7 +38,7 @@ unsigned long get_syscall_res(struct pt_regs* regs) {
 #endif
 }
 
-unsigned long get_arg1(struct pt_regs* regs) {
+inline unsigned long get_arg1(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->si;
 #elif defined(CONFIG_ARM64)
@@ -50,7 +50,7 @@ unsigned long get_arg1(struct pt_regs* regs) {
 #endif
 }
 
-unsigned long get_arg2(struct pt_regs* regs) {
+inline unsigned long get_arg2(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->dx;
 #elif defined(CONFIG_ARM64)
@@ -61,7 +61,8 @@ unsigned long get_arg2(struct pt_regs* regs) {
   return -1;
 #endif
 }
-unsigned long get_arg3(struct pt_regs* regs) {
+
+inline unsigned long get_arg3(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->r10;
 #elif defined(CONFIG_ARM64)
@@ -72,7 +73,8 @@ unsigned long get_arg3(struct pt_regs* regs) {
   return -1;
 #endif
 }
-unsigned long get_arg4(struct pt_regs* regs) {
+
+inline unsigned long get_arg4(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->r8;
 #elif defined(CONFIG_ARM64)
@@ -84,7 +86,7 @@ unsigned long get_arg4(struct pt_regs* regs) {
 #endif
 }
 
-unsigned long get_arg5(struct pt_regs* regs) {
+inline unsigned long get_arg5(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->r9;
 #elif defined(CONFIG_ARM64)
