@@ -8,6 +8,7 @@
 #include <linux/tracepoint.h>
 #include <trace/events/syscalls.h>
 
+#include "data-structure/hashtable.h"
 #include "proc-filter.h"
 #include "record-buffer.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
@@ -15,6 +16,7 @@
 spinlock_t small_buf_lock;
 u64 buf_offset = 0;
 u64 syscall_count = 0;
+struct hashtable proc_arg0_hash_table;
 extern int pid;
 extern char *proc_name;
 
@@ -25,8 +27,12 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret);
 unsigned long long get_syscall_res(struct pt_regs *regs) {
 #ifdef CONFIG_X86
   return regs->ax;
-#else
+#elif defined(CONFIG_ARM64)
   return regs->regs[0];
+#elif defined(CONFIG_RISCV)
+  return regs->a0;
+#else
+  return -1;
 #endif
 }
 
@@ -38,24 +44,24 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
     return;
   }
 
-  sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s\n", id,
-          current->pid, name);
-  len = strlen(small_buf);
-  if (!check_offset(len)) {
-    // dump to file
-    // double check (and lock the inner one) to minimize the influence  
-    WRITE_FILE_LOCK();
-    if (!check_offset(len)) {
-      dump_to_file();
-    }
-     WRITE_FILE_UNLOCK();
-  }
+  //   sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s\n", id,
+  //           current->pid, name);
+  //   len = strlen(small_buf);
+  //   if (!check_offset(len)) {
+  //     // dump to file
+  //     // double check (and lock the inner one) to minimize the influence
+  //     WRITE_FILE_LOCK();
+  //     if (!check_offset(len)) {
+  //       dump_to_file();
+  //     }
+  //      WRITE_FILE_UNLOCK();
+  //   }
 
 #ifdef ENABLE_LOCK
   spin_lock_irq(&small_buf_lock);
 #endif
-  write_something_to_buffer(small_buf, len);
-
+  // write_something_to_buffer(small_buf, len);
+  
   syscall_count++;
 #ifdef ENABLE_LOCK
   spin_unlock_irq(&small_buf_lock);
@@ -69,7 +75,6 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
-
 
   sprintf(small_buf,
           "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx, name=%s\n",
@@ -153,6 +158,5 @@ static void register_syscall_hook(void) {
     tracepoint_probe_register(interests[i].value, interests[i].fct, NULL);
   }
 }
-
 
 #endif
