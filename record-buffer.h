@@ -23,7 +23,7 @@
 
 char real_buffer[BUF_SIZE];
 
-static unsigned long real_offset = 0;
+unsigned long real_offset = 0;
 extern u64 syscall_count;
 static bool check_offset(unsigned long str_len) {
   return real_offset + str_len < BUF_SIZE;
@@ -31,9 +31,9 @@ static bool check_offset(unsigned long str_len) {
 
 static void dump_to_file(void) {
   // definitely needs a lock when call it...
-  printk(
-      "it is time to dump records to file with offset: %ld, current stat: %lld",
-      real_offset, syscall_count);
+  // printk(
+  //     "it is time to dump records to file with offset: %ld, current stat: %lld",
+  //     real_offset, syscall_count);
   save_to_file(real_buffer, real_offset);
   real_offset = 0;
 }
