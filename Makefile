@@ -1,7 +1,7 @@
 CONFIG_MODULE_SIG=n 
 obj-m := my_sysdig.o
 # my_sysdig-objs := my_sysdig.o remapping-driver.o
-ccflags-y += -O2
+# ccflags-y += -O2
 KDIR := /usr/src/linux-headers-$(shell uname -r)
 PWD := $(shell pwd)
 

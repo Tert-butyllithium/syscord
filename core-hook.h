@@ -8,93 +8,100 @@
 #include <linux/tracepoint.h>
 #include <trace/events/syscalls.h>
 
+#include "data-structure/hashtable.h"
 #include "proc-filter.h"
 #include "record-buffer.h"
+#include "syscalls/arch.h"
+#include "syscalls/handlers.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
 spinlock_t small_buf_lock;
+spinlock_t hashtable_lock;
 u64 buf_offset = 0;
 u64 syscall_count = 0;
+
+struct hashtable proc_arg0_hash_table;
 extern int pid;
 extern char *proc_name;
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id);
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret);
-// TRACEPOINT_PROBE(syscall_procexit_probe, struct task_struct *p);
-
-unsigned long long get_syscall_res(struct pt_regs *regs) {
-#ifdef CONFIG_X86
-  return regs->ax;
-#else
-  return regs->regs[0];
-#endif
-}
 
 TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
-  char *name = get_process_name();
-  unsigned long len;
-  char small_buf[128];
+  // char *name = get_process_name();
+  // unsigned long len;
+  // char small_buf[128];
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
 
-  // memset(small_buf,0,sizeof small_buf);
-
-  sprintf(small_buf, "syscall 0x%lx, with pid=0x%x, name=%s\n", id,
-          current->pid, name);
-  // write_something(small_buf, &buf_offset);
-  len = strlen(small_buf);
-  if (!check_offset(len)) {
-    // dump to file
-    WRITE_FILE_LOCK();
-    if (!check_offset(len)) {
-      dump_to_file();
-    }
-     WRITE_FILE_UNLOCK();
-  }
-
 #ifdef ENABLE_LOCK
-  spin_lock_irq(&small_buf_lock);
+  spin_lock_irq(&hashtable_lock);
 #endif
-  write_something_to_buffer(small_buf, len);
-
+  // write_something_to_buffer(small_buf, len);
+  hashtable_put(&proc_arg0_hash_table, current->pid,
+                (HASH_TABLE_ENTER){id, get_arg0(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
-  spin_unlock_irq(&small_buf_lock);
+  spin_unlock_irq(&hashtable_lock);
 #endif
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
-  char *name = get_process_name();
+  unsigned long syscall_no = 114514, arg0 = 114514;
+  HASH_TABLE_ENTER *record = NULL;
+  char small_buf[512];
+  // char *name = get_process_name();
   unsigned long len;
-  char small_buf[128];
+
   if (check_proc(pid, proc_name) == 0) {
     return;
   }
 
-  // memset(small_buf,0,sizeof small_buf);
+#ifdef ENABLE_LOCK
+  spin_lock_irq(&hashtable_lock);
+#endif
+  // get the info from hash table
+  record = hashtable_get(&proc_arg0_hash_table, current->pid);
+  if (record) {
+    syscall_no = record->no;
+    arg0 = record->arg0;
+  }
+  hashtable_delete(&proc_arg0_hash_table, current->pid);
+  // gen_record_str(small_buf, regs, syscall_no, arg0);
+#ifdef ENABLE_LOCK
+  spin_unlock_irq(&hashtable_lock);
+#endif
 
-  sprintf(small_buf,
-          "exit syscall, regs[0]=0x%llx, with pid=0x%x, ret=0x%lx, name=%s\n",
-          get_syscall_res(regs), current->pid, ret, name);
+  // memset(small_buf,0,300);
+  gen_record_str(small_buf, regs, syscall_no, arg0);
+  // sprintf(small_buf,
+  //         "pid=%d, %s, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
+  //         get_syscall_res(regs), current->pid, ret, name);
   len = strlen(small_buf);
+ 
+ WRITE_FILE_LOCK();
   if (!check_offset(len)) {
     // dump to file
-    WRITE_FILE_LOCK();
-    if (!check_offset(len)) {
+    // same procedure with `syscall_enter`, need optimize
+    // if (!check_offset(len)) {
       dump_to_file();
-    }
-    WRITE_FILE_UNLOCK();
-  }
+    // }
+  } 
 
-#ifdef ENABLE_LOCK
-  spin_lock_irq(&small_buf_lock);
-#endif
-  write_something_to_buffer(small_buf, len);
-  syscall_count++;
-#ifdef ENABLE_LOCK
-  spin_unlock_irq(&small_buf_lock);
-#endif
+    write_something_to_buffer(small_buf, len);
+    syscall_count++;
+    WRITE_FILE_UNLOCK();
+  // #ifdef ENABLE_LOCK
+  //   spin_lock_irq(&small_buf_lock);
+  // #endif
+  // WRITE_FILE_LOCK();
+  //   write_something_to_buffer(small_buf, len);
+  //   syscall_count++;
+  // WRITE_FILE_UNLOCK();
+  // #ifdef ENABLE_LOCK
+  //   spin_unlock_irq(&small_buf_lock);
+  // #endif
 }
 
 /**
@@ -150,23 +157,10 @@ static void register_syscall_hook(void) {
       printk("Error, %s not found\n", interests[i].name);
       // Unload previously loaded
       cleanup();
-      // return -1;
     }
     interests[i].init = 1;
     tracepoint_probe_register(interests[i].value, interests[i].fct, NULL);
   }
 }
-
-// static void unregister_syscall_hook(void) {
-//   int i;
-
-//   // Cleanup the tracepoints
-//   FOR_EACH_INTEREST(i) {
-//     if (interests[i].init) {
-//       tracepoint_probe_unregister(interests[i].value, interests[i].fct,
-//       NULL); tracepoint_synchronize_unregister();
-//     }
-//   }
-// }
 
 #endif

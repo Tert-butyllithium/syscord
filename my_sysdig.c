@@ -27,12 +27,11 @@ MODULE_DESCRIPTION("A Linux kenrel module for capturing syscalls");
 MODULE_VERSION("0.01");
 
 static void __exit my_sysdig_exit(void) {
-
-  // dump_buffer();
   printk("statistics: %llu\n", syscall_count);
-  printk("saving to file...with length: %lu",real_offset);
-  // save_to_file(real_buffer, real_offset);
-  // exit_remapping();
+  printk("saving to file...with length: %lu", real_offset);
+#ifdef MYSYSDIG_DEBUG
+  dump_buffer();
+#endif
   dump_to_file();
   cleanup();
   close_record_file();
@@ -40,16 +39,12 @@ static void __exit my_sysdig_exit(void) {
 }
 
 static int __init my_sysdig_init(void) {
-  // int i;
-  // buffer init
-  // init_remapping();
+
   open_record_file("/etc/syscall-record/record");
   spin_lock_init(&small_buf_lock);
-
+  spin_lock_init(&hashtable_lock);
 
   register_syscall_hook();
-
-  printk(KERN_INFO "[my_sysdig:] load successfully!");
   // then print out the filter condition
   printk(KERN_INFO "[my_sysdig:] pid=%d and proc_name=%s", pid, proc_name);
   printk(KERN_INFO "[my_sysdig:] load successfully!");
