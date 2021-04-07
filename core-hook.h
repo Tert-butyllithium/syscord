@@ -73,11 +73,8 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   spin_unlock_irq(&hashtable_lock);
 #endif
 
-  // memset(small_buf,0,300);
   gen_record_str(small_buf, regs, syscall_no, arg0);
-  // sprintf(small_buf,
-  //         "pid=%d, %s, regs[0]=0x%lx, with pid=0x%x, ret=0x%lx, name=%s\n",
-  //         get_syscall_res(regs), current->pid, ret, name);
+
   len = strlen(small_buf);
  
  WRITE_FILE_LOCK();
@@ -92,16 +89,6 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     write_something_to_buffer(small_buf, len);
     syscall_count++;
     WRITE_FILE_UNLOCK();
-  // #ifdef ENABLE_LOCK
-  //   spin_lock_irq(&small_buf_lock);
-  // #endif
-  // WRITE_FILE_LOCK();
-  //   write_something_to_buffer(small_buf, len);
-  //   syscall_count++;
-  // WRITE_FILE_UNLOCK();
-  // #ifdef ENABLE_LOCK
-  //   spin_unlock_irq(&small_buf_lock);
-  // #endif
 }
 
 /**
