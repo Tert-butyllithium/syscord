@@ -2,36 +2,30 @@
 #define _MYSYSDIG_ALL_ARCH
 #include "__arm64.h"
 #include "__x86_64.h"
+#include "handlers-table.h"
 #include "handlers.h"
 
 extern char syscall_id_to_name[][32];
-
-// return the name by syscall?
+extern handler_callback syscall_id_handlers[512];
+const unsigned long SYSCALL_TABLE_SIZE =
+    sizeof(syscall_id_to_name) / sizeof(syscall_id_to_name[0]);
+// return the name by syscall number
 char* get_syscall_name(int id) {
-  static unsigned long SYSCALL_TABLE_SIZE =
-      sizeof(syscall_id_to_name) / sizeof(syscall_id_to_name[0]);
   if (id >= SYSCALL_TABLE_SIZE) {
     return "unknown";
   }
   return syscall_id_to_name[id];
 }
 
+extern void init_syscall_id_handlers(void);
+
 void gen_record_str(char* small_buf, struct pt_regs* regs,
                     unsigned long syscall_no, long ret, unsigned long arg0) {
-  unsigned long arg1 = get_arg1(regs);
-  // unsigned long arg2 = get_arg2(regs);
-  // unsigned long arg3 = get_arg3(regs);
-  // unsigned long arg4 = get_arg4(regs);
-  // unsigned long arg5 = get_arg5(regs);
-  //   sprintf(small_buf,
-  //           "pid=%d, %s, ret=0x%lx, arg0=0x%lx, arg1=0x%lx, arg2=0x%lx, "
-  //           "arg3=0x%lx ,arg4=0x%lx, arg5=0x%lx, name=%s\n",
-  //           current->pid, syscall_id_to_name[syscall_no], res, arg0, arg1,
-  //           arg2, arg3, arg4, arg5, current->comm);
-  //      printk("%s",small_buf);
-  sprintf(small_buf, "pid=%d, %ld, ret=0x%lx, arg0=0x%lx, arg1=0x%lx\n",
-          current->pid, syscall_no, ret, arg0, arg1);
-  //   printk("%s", small_buf);
+  if (syscall_no >= SYSCALL_TABLE_SIZE) {
+    default_handle(small_buf, regs, syscall_no, ret, arg0);
+  } else {
+    syscall_id_handlers[syscall_no](small_buf, regs, syscall_no, ret, arg0);
+  }
 }
 
 #endif
