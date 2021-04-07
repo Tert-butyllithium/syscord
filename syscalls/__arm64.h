@@ -292,5 +292,5 @@ char syscall_id_to_name[][32] = {
     "pkey_alloc",
     "pkey_free",
     "statx"
-}
+};
 #endif
