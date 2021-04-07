@@ -73,22 +73,18 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   spin_unlock_irq(&hashtable_lock);
 #endif
 
-  gen_record_str(small_buf, regs, syscall_no, arg0);
+  gen_record_str(small_buf, regs, syscall_no, ret, arg0);
 
   len = strlen(small_buf);
- 
- WRITE_FILE_LOCK();
-  if (!check_offset(len)) {
-    // dump to file
-    // same procedure with `syscall_enter`, need optimize
-    // if (!check_offset(len)) {
-      dump_to_file();
-    // }
-  } 
 
-    write_something_to_buffer(small_buf, len);
-    syscall_count++;
-    WRITE_FILE_UNLOCK();
+  WRITE_FILE_LOCK();
+  if (!check_offset(len)) {
+    dump_to_file();
+  }
+
+  write_something_to_buffer(small_buf, len);
+  syscall_count++;
+  WRITE_FILE_UNLOCK();
 }
 
 /**
