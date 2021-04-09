@@ -223,20 +223,22 @@ int munmap_handle(char* small_buf, struct pt_regs* regs,
 
 int nanosleep_handle(char* small_buf, struct pt_regs* regs,
                      unsigned long syscall_no, long ret, unsigned long arg0) {
-  struct timespec* req = (void*)arg0;
-  sprintf(small_buf, "pid=%d, nanosleep, interval=%ld\n", current->pid,
-          req->tv_nsec);
+  // struct timespec* req = (void*)arg0;
+  // sprintf(small_buf, "pid=%d, nanosleep, interval=%ld\n", current->pid,
+  //         req->tv_nsec);
+  sprintf(small_buf, "pid=%d, nanosleep\n");
   return 0;
 }
 
 // need some test...
 int ppoll_handle(char* small_buf, struct pt_regs* regs,
                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  int* fds = (void*)arg0;
-  short* fds2 = (short*)fds;
-  int fd = *fds;
-  sprintf(small_buf, "pid=%d, ppoll, fd=%d, events=%hd, revents=%hd\n",
-          current->pid, fd, fds2[2], fds2[3]);
+  // int* fds = (void*)arg0;
+  // short* fds2 = (short*)fds;
+  // int fd = *fds;
+  // sprintf(small_buf, "pid=%d, ppoll, fd=%d, events=%hd, revents=%hd\n",
+  //         current->pid, fd, fds2[2], fds2[3]);
+  sprintf(small_buf, "pid=%d, ppoll\n");
   return 0;
 }
 
