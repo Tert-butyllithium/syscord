@@ -21,7 +21,7 @@ struct file* file_open(const char* path, int flags, int rights) {
   mutex_init(&file_write_mutex);
 
   oldfs = get_fs();
-  set_fs(get_ds());
+  set_fs(KERNEL_DS);
   filp = filp_open(path, flags, rights);
   set_fs(oldfs);
   if (IS_ERR(filp)) {
