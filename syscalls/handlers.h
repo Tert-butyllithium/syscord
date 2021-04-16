@@ -99,9 +99,20 @@ int getuid_handle(char* small_buf, struct pt_regs* regs,
 
 int recvfrom_handle(char* small_buf, struct pt_regs* regs,
                     unsigned long syscall_no, long ret, unsigned long arg0) {
+
+  // int fd = arg0;
+  // void* buf = (void*)get_arg1(regs);
+  // size_t count = get_arg2(regs);
+  // // NOTE: need ARGS_BUF_SIZE + 1 to save '\0'
+  // char buf_tmp[ARGS_BUF_SIZE + 1];
+  // assemble_buf_arg(buf_tmp, buf, ret);
+  // sprintf(small_buf, "pid=%d, recvfrom, fd=%d, size=%ld, res=%ld, data%s=%s\n",
+  //         current->pid, fd, count, ret, (ret > ARGS_BUF_SIZE ? "(part)" : ""),
+  //         buf_tmp);
+  // return 0;
   int sockfd = arg0;
-  sprintf(small_buf, "pid=%d, recvfrom, fd=%ld res=0x%x\n", current->pid, ret,
-          sockfd);
+  sprintf(small_buf, "pid=%d, recvfrom, fd=%d, res=%ld\n", current->pid, sockfd,
+          ret);
   return 0;
 }
 
