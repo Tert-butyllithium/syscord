@@ -31,7 +31,7 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   // char *name = get_process_name();
   // unsigned long len;
   // char small_buf[128];
-  if (check_proc(pid, proc_name) == 0) {
+  if (check_proc(pid, proc_name, ppid, parent_proc_name) == 0) {
     return;
   }
 
@@ -54,7 +54,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   // char *name = get_process_name();
   unsigned long len;
 
-  if (check_proc(pid, proc_name) == 0) {
+  if (check_proc(pid, proc_name, ppid, parent_proc_name) == 0) {
     return;
   }
 

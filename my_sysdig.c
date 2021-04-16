@@ -13,6 +13,10 @@ static int pid = 0;
 module_param(pid, int, 0600);
 static char *proc_name = "";
 module_param(proc_name, charp, 0660);
+static int ppid = 0;
+module_param(ppid, int, 0600);
+static char *parent_proc_name = "";
+module_param(parent_proc_name, charp, 0660);
 
 // #include "proc-filter.h"
 // #include "dump-file.h"
