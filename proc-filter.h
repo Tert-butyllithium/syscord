@@ -12,7 +12,7 @@ u8 check_proc_ppid(int ppid) {
   if (unlikely(!current->parent)) {
     return 0;
   }
-  return pid == current->parent->pid;
+  return ppid == current->parent->pid;
 }
 
 // only get first 15 characters
