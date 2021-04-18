@@ -226,7 +226,7 @@ int nanosleep_handle(char* small_buf, struct pt_regs* regs,
   // struct timespec* req = (void*)arg0;
   // sprintf(small_buf, "pid=%d, nanosleep, interval=%ld\n", current->pid,
   //         req->tv_nsec);
-  sprintf(small_buf, "pid=%d, nanosleep\n");
+  sprintf(small_buf, "pid=%d, nanosleep\n", current->pid);
   return 0;
 }
 
@@ -238,7 +238,7 @@ int ppoll_handle(char* small_buf, struct pt_regs* regs,
   // int fd = *fds;
   // sprintf(small_buf, "pid=%d, ppoll, fd=%d, events=%hd, revents=%hd\n",
   //         current->pid, fd, fds2[2], fds2[3]);
-  sprintf(small_buf, "pid=%d, ppoll\n");
+  sprintf(small_buf, "pid=%d, ppoll\n", current->pid);
   return 0;
 }
 
