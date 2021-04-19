@@ -48,9 +48,10 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
-  // HASH_TABLE_ENTER saved_entry = (HASH_TABLE_ENTER){114514,114514,114514};
-  HASH_TABLE_ENTER *record = NULL;
+  // HASH_TABLE_ENTER *record = NULL;
   char small_buf[512];
+  struct handler_args _handler_args =
+      (struct handler_args){small_buf, regs, ret, NULL};
   // char *name = get_process_name();
   unsigned long len;
 
@@ -62,8 +63,9 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   spin_lock_irq(&hashtable_lock);
 #endif
   // get the info from hash table
-  record = hashtable_get(&proc_arg0_hash_table, current->pid);
-  if(likely(record)){
+  _handler_args.saved_entry =
+      hashtable_get(&proc_arg0_hash_table, current->pid);
+  if (likely(_handler_args.saved_entry)) {
     hashtable_delete(&proc_arg0_hash_table, current->pid);
   }
 
@@ -72,7 +74,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   spin_unlock_irq(&hashtable_lock);
 #endif
 
-  gen_record_str(small_buf, regs, ret, record);
+  gen_record_str(&_handler_args);
 
   len = strlen(small_buf);
 

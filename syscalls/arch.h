@@ -5,6 +5,8 @@
 #include "handlers-table.h"
 #include "handlers.h"
 
+
+
 inline unsigned long get_arg0(struct pt_regs* regs) {
 #ifdef CONFIG_X86
   return regs->di;
@@ -92,12 +94,11 @@ char* get_syscall_name(HASH_TABLE_ENTER* saved_entry) {
 
 extern void init_syscall_id_handlers(void);
 
-void gen_record_str(char* small_buf, struct pt_regs* regs, long ret,
-                    HASH_TABLE_ENTER *saved_entry) {
-  if(saved_entry == NULL){
-    default_handle(small_buf, regs, ret, saved_entry);
+void gen_record_str(struct handler_args* _handler_args) {
+  if(_handler_args->saved_entry == NULL){
+    default_handle(_handler_args);
   } else {
-    syscall_id_handlers[saved_entry->no](small_buf, regs, ret, saved_entry);
+    syscall_id_handlers[_handler_args->saved_entry->no](_handler_args);
   }
 }
 
