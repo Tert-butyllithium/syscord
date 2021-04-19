@@ -32,8 +32,8 @@ static bool check_offset(unsigned long str_len) {
 static void dump_to_file(void) {
   // definitely needs a lock when call it...
   // printk(
-  //     "it is time to dump records to file with offset: %ld, current stat: %lld",
-  //     real_offset, syscall_count);
+  //     "it is time to dump records to file with offset: %ld, current stat:
+  //     %lld", real_offset, syscall_count);
   save_to_file(real_buffer, real_offset);
   real_offset = 0;
 }
@@ -42,6 +42,14 @@ static void write_something_to_buffer(const char* src,
                                       const unsigned long str_len) {
   unsigned long offset_end = real_offset + str_len;
   strncpy(real_buffer + real_offset, src, str_len);
+  real_offset = offset_end;
+}
+
+static void __attribute__((unused))
+write_something_to_buffer_from_user(const char* src,
+                                    const unsigned long str_len) {
+  unsigned long offset_end = real_offset + str_len;
+  strncpy_from_user(real_buffer + real_offset, src, str_len);
   real_offset = offset_end;
 }
 

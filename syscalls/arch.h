@@ -94,11 +94,11 @@ char* get_syscall_name(HASH_TABLE_ENTER* saved_entry) {
 
 extern void init_syscall_id_handlers(void);
 
-void gen_record_str(struct handler_args* _handler_args) {
+int gen_record_str(struct handler_args* _handler_args) {
   if(_handler_args->saved_entry == NULL){
-    default_handle(_handler_args);
+    return default_handle(_handler_args);
   } else {
-    syscall_id_handlers[_handler_args->saved_entry->no](_handler_args);
+    return syscall_id_handlers[_handler_args->saved_entry->no](_handler_args);
   }
 }
 

@@ -52,6 +52,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   char small_buf[512];
   struct handler_args _handler_args =
       (struct handler_args){small_buf, regs, ret, NULL};
+  int record_partial_flag = 0;
   // char *name = get_process_name();
   unsigned long len;
 
@@ -74,18 +75,18 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   spin_unlock_irq(&hashtable_lock);
 #endif
 
-  gen_record_str(&_handler_args);
+  record_partial_flag = gen_record_str(&_handler_args);
+  if (record_partial_flag == 0) {
+    len = strlen(small_buf);
+    WRITE_FILE_LOCK();
+    if (!check_offset(len)) {
+      dump_to_file();
+    }
 
-  len = strlen(small_buf);
-
-  WRITE_FILE_LOCK();
-  if (!check_offset(len)) {
-    dump_to_file();
+    write_something_to_buffer(small_buf, len);
+    syscall_count++;
+    WRITE_FILE_UNLOCK();
   }
-
-  write_something_to_buffer(small_buf, len);
-  syscall_count++;
-  WRITE_FILE_UNLOCK();
 }
 
 /**
