@@ -5,7 +5,7 @@
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/mutex.h>
-#define WRITE_FILE_LOCK() mutex_lock_interruptible(&file_write_mutex)
+#define WRITE_FILE_LOCK() mutex_lock(&file_write_mutex)
 #define WRITE_FILE_UNLOCK() mutex_unlock(&file_write_mutex)
 static struct file* __file_to_record = NULL;
 struct mutex file_write_mutex;
