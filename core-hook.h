@@ -40,7 +40,7 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 #endif
   // write_something_to_buffer(small_buf, len);
   hashtable_put(&proc_arg0_hash_table, current->pid,
-                (HASH_TABLE_ENTER){id, get_arg0(regs)});
+                (HASH_TABLE_ENTER){id, get_arg0(regs), get_arg1(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
   spin_unlock_irq(&hashtable_lock);
@@ -48,7 +48,7 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
 }
 
 TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
-  unsigned long syscall_no = 114514, arg0 = 114514;
+  // HASH_TABLE_ENTER saved_entry = (HASH_TABLE_ENTER){114514,114514,114514};
   HASH_TABLE_ENTER *record = NULL;
   char small_buf[512];
   // char *name = get_process_name();
@@ -63,17 +63,16 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
 #endif
   // get the info from hash table
   record = hashtable_get(&proc_arg0_hash_table, current->pid);
-  if (record) {
-    syscall_no = record->no;
-    arg0 = record->arg0;
+  if(likely(record)){
+    hashtable_delete(&proc_arg0_hash_table, current->pid);
   }
-  hashtable_delete(&proc_arg0_hash_table, current->pid);
+
   // gen_record_str(small_buf, regs, syscall_no, arg0);
 #ifdef ENABLE_LOCK
   spin_unlock_irq(&hashtable_lock);
 #endif
 
-  gen_record_str(small_buf, regs, syscall_no, ret, arg0);
+  gen_record_str(small_buf, regs, ret, record);
 
   len = strlen(small_buf);
 

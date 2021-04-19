@@ -45,16 +45,16 @@ static void write_something_to_buffer(const char* src,
   real_offset = offset_end;
 }
 
-static void dump_buffer(void) {
-  unsigned long offset = 0;
-  unsigned long a;
-  while (1) {
-    printk("%s\n", real_buffer + offset);
-    a = strlen(real_buffer + offset);
-    if (a == 0) {
-      break;
-    }
-    offset += a + 1;
-  }
-}
+// static void dump_buffer(void) {
+//   unsigned long offset = 0;
+//   unsigned long a;
+//   while (1) {
+//     printk("%s\n", real_buffer + offset);
+//     a = strlen(real_buffer + offset);
+//     if (a == 0) {
+//       break;
+//     }
+//     offset += a + 1;
+//   }
+// }
 #endif

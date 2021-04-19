@@ -3,8 +3,8 @@
 #include "handlers.h"
 extern char syscall_id_to_name[][32];
 
-typedef int (*handler_callback)(char*, struct pt_regs*, unsigned long, long,
-                                unsigned long);
+typedef int (*handler_callback)(char*, struct pt_regs*, long,
+                                HASH_TABLE_ENTER*);
 handler_callback functions[] = {
     &getuid_handle, &recvfrom_handle, &socket_handle, &fstat_handle,
     &getcwd_handle, &lseek_handle,    &futex_handle,  &sendto_handle,
@@ -30,7 +30,8 @@ void init_syscall_id_handlers(void) {
     for (j = 0; j < HANDLER_TABLE_SIZE; j++) {
       if (strcmp(syscall_id_to_name[i], handler_string[j]) == 0) {
         syscall_id_handlers[i] = functions[j];
-        printk("[my_sysdig:] %d:%s - %pF", i, syscall_id_to_name[i], functions[j]);
+        printk("[my_sysdig:] %d:%s - %pF", i, syscall_id_to_name[i],
+               functions[j]);
         goto next_label;
       }
     }
