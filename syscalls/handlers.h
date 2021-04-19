@@ -3,9 +3,9 @@
 #include <asm/ptrace.h>
 #define ARGS_BUF_SIZE 200
 
-struct handler_args{
+struct handler_args {
   char* small_buf;
-  struct pt_regs *regs;
+  struct pt_regs* regs;
   long ret;
   HASH_TABLE_ENTER* saved_entry;
 };
@@ -207,7 +207,7 @@ int ioctl_handle(struct handler_args* _handler_args) {
 int open_handle(struct handler_args* _handler_args) {
   const void* pathname = (void*)_handler_args->saved_entry->arg0;
   const int flags = _handler_args->saved_entry->arg1;
-  const mode_t mode = get_arg3(_handler_args->regs);
+  const mode_t mode = get_arg2(_handler_args->regs);
   char buf_tmp[ARGS_BUF_SIZE + 1];
 
   assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
@@ -216,5 +216,35 @@ int open_handle(struct handler_args* _handler_args) {
           current->pid, buf_tmp, flags, mode, (int)_handler_args->ret);
   return 0;
 }
+
+int creat_handle(struct handler_args* _handler_args) {
+  const void* pathname = (void*)_handler_args->saved_entry->arg0;
+  const mode_t mode = _handler_args->saved_entry->arg1;
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+
+  assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, creat, path=%s, mode=%u, _handler_args->ret=%d\n",
+          current->pid, buf_tmp, mode, (int)_handler_args->ret);
+  return 0;
+}
+
+int openat_handle(struct handler_args* _handler_args) {
+  // dirfd = -100 represents AT_FDCWD (the current work directory) 
+  const int dirfd = _handler_args->saved_entry->arg0;
+  const void* pathname = (void*)_handler_args->saved_entry->arg1;
+  const int flags = get_arg2(_handler_args->regs);
+  const mode_t mode = get_arg3(_handler_args->regs);
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+
+  assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, openat, dir=%d, path=%s, flags=%d, mode=%u, "
+          "_handler_args->ret=%d\n",
+          current->pid, dirfd, buf_tmp, flags, mode, (int)_handler_args->ret);
+  return 0;
+}
+
+
 
 #endif
