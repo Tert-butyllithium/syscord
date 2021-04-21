@@ -1,6 +1,6 @@
 #ifndef _MYSYSDIG_HANDLERS_H
 #define _MYSYSDIG_HANDLERS_H
-#define READ_PARTIAL_RECORD
+#define TRUNCATE_CONTENT_RECORD
 #include <asm/ptrace.h>
 #define ARGS_BUF_SIZE 200
 
@@ -140,7 +140,7 @@ int read_handle(struct handler_args* _handler_args) {
   size_t count = get_arg2(_handler_args->regs);
   int __attribute__((unused)) small_buf_len;
   // NOTE: need ARGS_BUF_SIZE + 1 to save '\0'
-#ifdef READ_PARTIAL_RECORD
+#ifdef TRUNCATE_CONTENT_RECORD
   char buf_tmp[ARGS_BUF_SIZE + 1];
   assemble_buf_arg(buf_tmp, buf, _handler_args->ret);
   sprintf(_handler_args->small_buf,
