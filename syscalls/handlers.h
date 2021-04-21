@@ -1,262 +1,285 @@
 #ifndef _MYSYSDIG_HANDLERS_H
 #define _MYSYSDIG_HANDLERS_H
+#define TRUNCATE_CONTENT_RECORD
 #include <asm/ptrace.h>
 #define ARGS_BUF_SIZE 200
 
-extern char* get_syscall_name(int);
-inline unsigned long get_arg0(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->di;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[0];
-#elif defined(CONFIG_RISCV)
-  return regs->a0;
-#else
-  return -1;
-#endif
-}
+struct handler_args {
+  char* small_buf;
+  struct pt_regs* regs;
+  long ret;
+  HASH_TABLE_ENTER* saved_entry;
+};
+extern char* get_syscall_name(HASH_TABLE_ENTER*);
+// extern inline unsigned long get_arg0(struct pt_regs* regs);
+// extern inline unsigned long get_arg1(struct pt_regs* regs);
+extern inline unsigned long get_arg2(struct pt_regs* regs);
+extern inline unsigned long get_arg3(struct pt_regs* regs);
+extern inline unsigned long get_arg4(struct pt_regs* regs);
+extern inline unsigned long get_arg5(struct pt_regs* regs);
 
-inline unsigned long get_arg1(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->si;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[1];
-#elif defined(CONFIG_RISCV)
-  return regs->a1;
-#else
-  return -1;
-#endif
-}
-
-inline unsigned long get_arg2(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->dx;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[2];
-#elif defined(CONFIG_RISCV)
-  return regs->a2;
-#else
-  return -1;
-#endif
-}
-
-inline unsigned long get_arg3(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->r10;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[3];
-#elif defined(CONFIG_RISCV)
-  return regs->a3;
-#else
-  return -1;
-#endif
-}
-
-inline unsigned long get_arg4(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->r8;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[4];
-#elif defined(CONFIG_RISCV)
-  return regs->a4;
-#else
-  return -1;
-#endif
-}
-
-inline unsigned long get_arg5(struct pt_regs* regs) {
-#ifdef CONFIG_X86
-  return regs->r9;
-#elif defined(CONFIG_ARM64)
-  return regs->regs[5];
-#elif defined(CONFIG_RISCV)
-  return regs->a5;
-#else
-  return -1;
-#endif
-}
-
-inline void assemble_buf_arg(char* tmp_buf, void* buf_addr, size_t len) {
+inline void assemble_buf_arg(char* tmp_buf, const void* buf_addr,
+                             const size_t len) {
   size_t tmp = min(len, (size_t)ARGS_BUF_SIZE);
   // NOTE: the buf_addr pointer a user address...
   strncpy_from_user(tmp_buf, buf_addr, tmp);
   tmp_buf[tmp] = '\0';
 }
 
-inline int default_handle(char* small_buf, struct pt_regs* regs,
-                          unsigned long syscall_no, long ret,
-                          unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, %s, res=%ld\n", current->pid,
-          get_syscall_name(syscall_no), ret);
+inline void assemble_struct_arg(void* dst_struct, const void* src_struct,
+                                const size_t len) {
+  // NOTE: the buf_addr pointer a user address...
+  strncpy_from_user(dst_struct, src_struct, len);
+}
+
+inline int default_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, %s, res=%ld\n", current->pid,
+          get_syscall_name(_handler_args->saved_entry), _handler_args->ret);
   return 0;
 }
 
-int getuid_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, gituid, res=0x%lx\n", current->pid, ret);
+int getuid_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, gituid, res=0x%lx\n", current->pid,
+          _handler_args->ret);
   return 0;
 }
 
-int recvfrom_handle(char* small_buf, struct pt_regs* regs,
-                    unsigned long syscall_no, long ret, unsigned long arg0) {
-  int sockfd = arg0;
-  sprintf(small_buf, "pid=%d, recvfrom, fd=%ld res=0x%x\n", current->pid, ret,
-          sockfd);
+int recvfrom_handle(struct handler_args* _handler_args) {
+  int fd = _handler_args->saved_entry->arg0;
+  void* buf = (void*)_handler_args->saved_entry->arg1;
+  size_t count = get_arg2(_handler_args->regs);
+  // NOTE: need ARGS_BUF_SIZE + 1 to save '\0'
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+  assemble_buf_arg(buf_tmp, buf, _handler_args->ret);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, %s, fd=%d, size=%ld, res=%ld, data%s=%s\n", current->pid,
+          get_syscall_name(_handler_args->saved_entry), fd, count,
+          _handler_args->ret,
+          (_handler_args->ret > ARGS_BUF_SIZE ? "(part)" : ""), buf_tmp);
   return 0;
 }
 
-int socket_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  int arg1 = get_arg1(regs);
-  int arg2 = get_arg2(regs);
-  sprintf(small_buf,
+inline int recv_handle(struct handler_args* _handler_args) {
+  return recvfrom_handle(_handler_args);
+}
+
+int shutdown_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf,
+          "pid=%d, shutdown, sockfd=%d, how=%d, res=0x%d\n", current->pid,
+          (int)_handler_args->saved_entry->arg0,
+          (int)_handler_args->saved_entry->arg1, (int)_handler_args->ret);
+  return 0;
+}
+
+int socket_handle(struct handler_args* _handler_args) {
+  int arg1 = _handler_args->saved_entry->arg1;
+  int arg2 = get_arg2(_handler_args->regs);
+  sprintf(_handler_args->small_buf,
           "pid=%d, socket, domain=%ld, type=%d, protocal=%d, fd=%ld\n",
-          current->pid, arg0, arg1, arg2, ret);
+          current->pid, _handler_args->saved_entry->arg0, arg1, arg2,
+          _handler_args->ret);
   return 0;
 }
 
-int fstat_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, fstat, fd=%ld, res=%ld\n", current->pid, arg0,
-          ret);
+int fstat_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, fstat, fd=%ld, res=%ld\n",
+          current->pid, _handler_args->saved_entry->arg0, _handler_args->ret);
   return 0;
 }
 
-int getcwd_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  // size_t size = get_arg1(regs);
-  char* res_p = (void*)ret;
+int getcwd_handle(struct handler_args* _handler_args) {
+  void* res_p = (void*)_handler_args->saved_entry->arg0;
+  char buf_tmp[ARGS_BUF_SIZE + 1];
   if (res_p) {
-    sprintf(small_buf, "pid=%d, getcwd, path=%s\n", current->pid, res_p);
+    assemble_buf_arg(buf_tmp, res_p, ARGS_BUF_SIZE);
+    sprintf(_handler_args->small_buf, "pid=%d, getcwd, path=%s\n", current->pid,
+            buf_tmp);
   } else {
-    sprintf(small_buf, "pid=%d, getcwd, ERROR\n", current->pid);
+    sprintf(_handler_args->small_buf, "pid=%d, getcwd, ERROR\n", current->pid);
   }
   return 0;
 }
 
-int lseek_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  int fd = arg0;
-  off_t offset = get_arg1(regs);
-  int whence = get_arg2(regs);
-  sprintf(small_buf, "pid=%d, lseek, fd=%d, offset=%ld, whence=%d, res=%ld\n",
-          current->pid, fd, offset, whence, ret);
+int lseek_handle(struct handler_args* _handler_args) {
+  int fd = _handler_args->saved_entry->arg0;
+  off_t offset = _handler_args->saved_entry->arg1;
+  int whence = get_arg2(_handler_args->regs);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, lseek, fd=%d, offset=%ld, whence=%d, res=%ld\n",
+          current->pid, fd, offset, whence, _handler_args->ret);
   return 0;
 }
 
-int futex_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  uint32_t addr = arg0;
-  int futex_op = get_arg1(regs);
-  uint32_t val = get_arg2(regs);
-  sprintf(small_buf, "pid=%d, futex, addr=%x, op=%d, val=%u, res=%ld\n",
-          current->pid, addr, futex_op, val, ret);
+int futex_handle(struct handler_args* _handler_args) {
+  uint32_t addr = _handler_args->saved_entry->arg0;
+  int futex_op = _handler_args->saved_entry->arg1;
+  uint32_t val = get_arg2(_handler_args->regs);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, futex, addr=%x, op=%d, val=%u, res=%ld\n", current->pid,
+          addr, futex_op, val, _handler_args->ret);
   return 0;
 }
 
-int sendto_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  int sockfd = arg0;
-  sprintf(small_buf, "pid=%d, sendto, sockfd=%d, size=%ld\n", current->pid,
-          sockfd, ret);
+int sendto_handle(struct handler_args* _handler_args) {
+  int sockfd = _handler_args->saved_entry->arg0;
+  sprintf(_handler_args->small_buf, "pid=%d, sendto, sockfd=%d, size=%ld\n",
+          current->pid, sockfd, _handler_args->ret);
   return 0;
 }
 
-int clone_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  int pid = ret;
-  sprintf(small_buf, "pid=%d, clone, res=%d\n", current->pid, pid);
+int clone_handle(struct handler_args* _handler_args) {
+  int pid = _handler_args->ret;
+  sprintf(_handler_args->small_buf, "pid=%d, clone, res=%d\n", current->pid,
+          pid);
   return 0;
 }
 
-int read_handle(char* small_buf, struct pt_regs* regs, unsigned long syscall_no,
-                long ret, unsigned long arg0) {
-  int fd = arg0;
-  void* buf = (void*)get_arg1(regs);
-  size_t count = get_arg2(regs);
+int read_handle(struct handler_args* _handler_args) {
+  int fd = _handler_args->saved_entry->arg0;
+  void* buf = (void*)_handler_args->saved_entry->arg1;
+  size_t count = get_arg2(_handler_args->regs);
+  int __attribute__((unused)) small_buf_len;
   // NOTE: need ARGS_BUF_SIZE + 1 to save '\0'
+#ifdef TRUNCATE_CONTENT_RECORD
   char buf_tmp[ARGS_BUF_SIZE + 1];
-  assemble_buf_arg(buf_tmp, buf, ret);
-  sprintf(small_buf, "pid=%d, read, fd=%d, size=%ld, res=%ld, data%s=%s\n",
-          current->pid, fd, count, ret, (ret > ARGS_BUF_SIZE ? "(part)" : ""),
-          buf_tmp);
+  assemble_buf_arg(buf_tmp, buf, _handler_args->ret);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, read, fd=%d, size=%ld, res=%ld, data%s=%s\n", current->pid,
+          fd, count, _handler_args->ret,
+          (_handler_args->ret > ARGS_BUF_SIZE ? "(part)" : ""), buf_tmp);
+  return 0;
+#else
+  sprintf(_handler_args->small_buf,
+          "pid=%d, read, fd=%d, size=%ld, res=%ld, data=", current->pid, fd,
+          count, _handler_args->ret);
+
+  small_buf_len = strlen(_handler_args->small_buf);
+  WRITE_FILE_LOCK();
+  if (!check_offset(small_buf_len + _handler_args->ret + 1)) {
+    dump_to_file();
+  }
+  syscall_count++;
+
+  write_something_to_buffer(_handler_args->small_buf, small_buf_len);
+  write_something_to_buffer_from_user(buf, _handler_args->ret);
+  write_something_to_buffer("\n", 1);
+  WRITE_FILE_UNLOCK();
+  return 1;
+#endif
+}
+
+int mmap_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, mmap, res=0x%lx\n", current->pid,
+          _handler_args->ret);
   return 0;
 }
 
-int mmap_handle(char* small_buf, struct pt_regs* regs, unsigned long syscall_no,
-                long ret, unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, mmap, res=0x%lx\n", current->pid, ret);
+int exit_group_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, exit_group\n", current->pid);
   return 0;
 }
 
-int exit_group_handle(char* small_buf, struct pt_regs* regs,
-                      unsigned long syscall_no, long ret, unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, exit_group\n", current->pid);
+int close_handle(struct handler_args* _handler_args) {
+  sprintf(_handler_args->small_buf, "pid=%d, close, fd=%d, res=%d\n",
+          current->pid, (int)_handler_args->saved_entry->arg0,
+          (int)_handler_args->ret);
   return 0;
 }
 
-int close_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  sprintf(small_buf, "pid=%d, close, fd=%d, res=%d\n", current->pid, (int)arg0,
-          (int)ret);
+int tgkill_handle(struct handler_args* _handler_args) {
+  pid_t tgid = _handler_args->saved_entry->arg0;
+  pid_t tid = _handler_args->saved_entry->arg1;
+  int sig = get_arg2(_handler_args->regs);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, tgkill, tgid=%d, tid=%d, sig=%d, res=%d\n", current->pid,
+          tgid, tid, sig, (int)_handler_args->ret);
   return 0;
 }
 
-int tgkill_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  pid_t tgid = arg0;
-  pid_t tid = get_arg1(regs);
-  int sig = get_arg2(regs);
-  sprintf(small_buf, "pid=%d, tgkill, tgid=%d, tid=%d, sig=%d, ret=%d\n",
-          current->pid, tgid, tid, sig, (int)ret);
+int munmap_handle(struct handler_args* _handler_args) {
+  unsigned long addr = _handler_args->saved_entry->arg0;
+  size_t length = _handler_args->saved_entry->arg1;
+  sprintf(_handler_args->small_buf,
+          "pid=%d, munmap, addr=0x%lx, length=%ld, res=%d\n", current->pid,
+          addr, length, (int)_handler_args->ret);
   return 0;
 }
 
-int munmap_handle(char* small_buf, struct pt_regs* regs,
-                  unsigned long syscall_no, long ret, unsigned long arg0) {
-  unsigned long addr = arg0;
-  size_t length = get_arg1(regs);
-  sprintf(small_buf, "pid=%d, munmap, addr=0x%lx, length=%ld, ret=%d\n",
-          current->pid, addr, length, (int)ret);
-  return 0;
-}
-
-int nanosleep_handle(char* small_buf, struct pt_regs* regs,
-                     unsigned long syscall_no, long ret, unsigned long arg0) {
-  // struct timespec* req = (void*)arg0;
-  // sprintf(small_buf, "pid=%d, nanosleep, interval=%ld\n", current->pid,
+int nanosleep_handle(struct handler_args* _handler_args) {
+  // struct timespec* req = (void*)_handler_args->saved_entry->arg0;
+  // sprintf(_handler_args->small_buf, "pid=%d, nanosleep, interval=%ld\n",
+  // current->pid,
   //         req->tv_nsec);
-  sprintf(small_buf, "pid=%d, nanosleep\n", current->pid);
+  sprintf(_handler_args->small_buf, "pid=%d, nanosleep\n", current->pid);
   return 0;
 }
 
 // need some test...
-int ppoll_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  // int* fds = (void*)arg0;
+int ppoll_handle(struct handler_args* _handler_args) {
+  // int* fds = (void*)_handler_args->saved_entry->arg0;
   // short* fds2 = (short*)fds;
   // int fd = *fds;
-  // sprintf(small_buf, "pid=%d, ppoll, fd=%d, events=%hd, revents=%hd\n",
+  // sprintf(_handler_args->small_buf, "pid=%d, ppoll, fd=%d, events=%hd,
+  // revents=%hd\n",
   //         current->pid, fd, fds2[2], fds2[3]);
-  sprintf(small_buf, "pid=%d, ppoll\n", current->pid);
+  sprintf(_handler_args->small_buf, "pid=%d, ppoll\n", current->pid);
   return 0;
 }
 
-int dup_handle(char* small_buf, struct pt_regs* regs, unsigned long syscall_no,
-               long ret, unsigned long arg0) {
-  int oldfd = arg0;
-  sprintf(small_buf, "pid=%d, dup, oldfd=%d, ret=%d\n", current->pid, oldfd,
-          (int)ret);
+int dup_handle(struct handler_args* _handler_args) {
+  int oldfd = _handler_args->saved_entry->arg0;
+  sprintf(_handler_args->small_buf, "pid=%d, dup, oldfd=%d, res=%d\n",
+          current->pid, oldfd, (int)_handler_args->ret);
   return 0;
 }
 
-int ioctl_handle(char* small_buf, struct pt_regs* regs,
-                 unsigned long syscall_no, long ret, unsigned long arg0) {
-  int fd = arg0;
-  unsigned long req = get_arg1(regs);
-  unsigned long argp = get_arg2(regs);
-  sprintf(small_buf, "pid=%d, ioctl, fd=%d, req=%ld, argp=0x%lx ret=%d\n",
-          current->pid, fd, req, argp, (int)ret);
+int ioctl_handle(struct handler_args* _handler_args) {
+  int fd = _handler_args->saved_entry->arg0;
+  unsigned long req = _handler_args->saved_entry->arg1;
+  unsigned long argp = get_arg2(_handler_args->regs);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, ioctl, fd=%d, req=%ld, argp=0x%lx, res=%d\n", current->pid,
+          fd, req, argp, (int)_handler_args->ret);
+  return 0;
+}
+
+int open_handle(struct handler_args* _handler_args) {
+  const void* pathname = (void*)_handler_args->saved_entry->arg0;
+  const int flags = _handler_args->saved_entry->arg1;
+  const mode_t mode = get_arg2(_handler_args->regs);
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+
+  assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, open, path=%s, flags=%d, mode=%u, res=%d\n", current->pid,
+          buf_tmp, flags, mode, (int)_handler_args->ret);
+  return 0;
+}
+
+int creat_handle(struct handler_args* _handler_args) {
+  const void* pathname = (void*)_handler_args->saved_entry->arg0;
+  const mode_t mode = _handler_args->saved_entry->arg1;
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+
+  assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
+  sprintf(_handler_args->small_buf, "pid=%d, creat, path=%s, mode=%u, res=%d\n",
+          current->pid, buf_tmp, mode, (int)_handler_args->ret);
+  return 0;
+}
+
+int openat_handle(struct handler_args* _handler_args) {
+  // dirfd = -100 represents AT_FDCWD (the current work directory)
+  const int dirfd = _handler_args->saved_entry->arg0;
+  const void* pathname = (void*)_handler_args->saved_entry->arg1;
+  const int flags = get_arg2(_handler_args->regs);
+  const mode_t mode = get_arg3(_handler_args->regs);
+  char buf_tmp[ARGS_BUF_SIZE + 1];
+
+  assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
+  sprintf(_handler_args->small_buf,
+          "pid=%d, openat, dir=%d, path=%s, flags=%d, mode=%u, "
+          "res=%d\n",
+          current->pid, dirfd, buf_tmp, flags, mode, (int)_handler_args->ret);
   return 0;
 }
 

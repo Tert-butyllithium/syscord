@@ -3,19 +3,20 @@
 #include "handlers.h"
 extern char syscall_id_to_name[][32];
 
-typedef int (*handler_callback)(char*, struct pt_regs*, unsigned long, long,
-                                unsigned long);
+typedef int (*handler_callback)(struct handler_args*);
 handler_callback functions[] = {
     &getuid_handle, &recvfrom_handle, &socket_handle, &fstat_handle,
     &getcwd_handle, &lseek_handle,    &futex_handle,  &sendto_handle,
     &clone_handle,  &read_handle,     &mmap_handle,   &exit_group_handle,
     &close_handle,  &tgkill_handle,   &munmap_handle, &nanosleep_handle,
-    &ppoll_handle,  &dup_handle,      &ioctl_handle};
+    &ppoll_handle,  &dup_handle,      &ioctl_handle,  &open_handle,
+    &creat_handle,  &openat_handle};
 
 char handler_string[][32] = {
-    "getuid", "recvfrom",  "socket", "fstat", "getcwd",     "lseek", "futex",
-    "sendto", "clone",     "read",   "mmap",  "exit_group", "close", "tgkill",
-    "munmap", "nanosleep", "ppoll",  "dup",   "ioctl"};
+    "getuid", "recvfrom", "socket", "fstat",     "getcwd", "lseek",
+    "futex",  "sendto",   "clone",  "read",      "mmap",   "exit_group",
+    "close",  "tgkill",   "munmap", "nanosleep", "ppoll",  "dup",
+    "ioctl",  "open",     "creat",  "openat"};
 
 handler_callback syscall_id_handlers[512];
 
@@ -30,7 +31,8 @@ void init_syscall_id_handlers(void) {
     for (j = 0; j < HANDLER_TABLE_SIZE; j++) {
       if (strcmp(syscall_id_to_name[i], handler_string[j]) == 0) {
         syscall_id_handlers[i] = functions[j];
-        printk("[my_sysdig:] %d:%s - %pF", i, syscall_id_to_name[i], functions[j]);
+        printk("[my_sysdig:] %d:%s - %pF", i, syscall_id_to_name[i],
+               functions[j]);
         goto next_label;
       }
     }
