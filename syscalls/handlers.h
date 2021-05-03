@@ -285,4 +285,9 @@ int openat_handle(struct handler_args* _handler_args) {
   return 0;
 }
 
+int writev_handle(struct handler_args* _handler_args){
+  default_handle(_handler_args);
+  return 1;
+}
+
 #endif

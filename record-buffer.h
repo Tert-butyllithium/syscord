@@ -19,7 +19,7 @@
 #define PAGE_ORDER 2
 /* this value can get from PAGE_ORDER */
 #define PAGES_NUMBER 4
-#define BUF_SIZE (1024 * 1024 * 8)  // 8M
+#define BUF_SIZE (1024 * 1024 * 16)  // 16M
 
 char real_buffer[BUF_SIZE];
 char real_of_real_buffer[BUF_SIZE];
