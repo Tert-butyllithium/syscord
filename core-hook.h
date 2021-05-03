@@ -55,7 +55,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   int record_partial_flag = 0;
   // char *name = get_process_name();
   unsigned long len;
-  // bool should_write_flag = false;
+  bool should_real_dump_file = false;
 
   if (check_proc(pid, proc_name, ppid, parent_proc_name) == 0) {
     return;
@@ -81,11 +81,16 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     len = strlen(small_buf);
     WRITE_FILE_LOCK();
     if (!check_offset(len)) {
-      dump_to_file();
+      transfer_to_real_of_real_buffer();
+      should_real_dump_file = true;
     }
     write_something_to_buffer(small_buf, len);
     syscall_count++;
     WRITE_FILE_UNLOCK();
+  }
+
+  if(should_real_dump_file){
+    dump_real_of_real_buffer();
   }
 }
 

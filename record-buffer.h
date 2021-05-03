@@ -22,20 +22,28 @@
 #define BUF_SIZE (1024 * 1024 * 8)  // 8M
 
 char real_buffer[BUF_SIZE];
-
+char real_of_real_buffer[BUF_SIZE];
 unsigned long real_offset = 0;
+unsigned long real_of_real_length = 0;
+
 extern u64 syscall_count;
 static bool check_offset(unsigned long str_len) {
   return real_offset + str_len < BUF_SIZE;
 }
 
-static void dump_to_file(void) {
+static void transfer_to_real_of_real_buffer(void) {
   // definitely needs a lock when call it...
   // printk(
   //     "it is time to dump records to file with offset: %ld, current stat:
   //     %lld", real_offset, syscall_count);
-  save_to_file(real_buffer, real_offset);
+  // save_to_file(real_buffer, real_offset);
+  strncpy(real_of_real_buffer, real_buffer, real_offset);
+  real_of_real_length = real_offset;
   real_offset = 0;
+}
+
+static inline void dump_real_of_real_buffer(void) {
+  save_to_file(real_of_real_buffer, real_of_real_length);
 }
 
 static void write_something_to_buffer(const char* src,

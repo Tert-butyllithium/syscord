@@ -1,5 +1,7 @@
 #ifndef _MYSYSDIG_HANDLERS_H
 #define _MYSYSDIG_HANDLERS_H
+
+// DO NOT COMMENT THIS DEFINE!!!
 #define TRUNCATE_CONTENT_RECORD
 #include <asm/ptrace.h>
 #define ARGS_BUF_SIZE 200
@@ -156,7 +158,7 @@ int read_handle(struct handler_args* _handler_args) {
   small_buf_len = strlen(_handler_args->small_buf);
   WRITE_FILE_LOCK();
   if (!check_offset(small_buf_len + _handler_args->ret + 1)) {
-    dump_to_file();
+    transfer_to_real_of_real_buffer();
   }
   syscall_count++;
 

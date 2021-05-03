@@ -36,7 +36,7 @@ static void __exit my_sysdig_exit(void) {
 #ifdef MYSYSDIG_DEBUG
   dump_buffer();
 #endif
-  dump_to_file();
+  transfer_to_real_of_real_buffer();
   cleanup();
   close_record_file();
   printk("[my_sysdig:] remove my_sysdig successfully");
