@@ -76,8 +76,8 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
 #endif
 
   record_partial_flag = gen_record_str(&_handler_args);
-  if (record_partial_flag == 0) {
-    len = strlen(small_buf);
+  if (record_partial_flag != -1) {
+    len = strlen(_handler_args.small_buf);
     WRITE_FILE_LOCK();
     if (!check_offset(len)) {
       transfer_to_real_of_real_buffer();
@@ -85,6 +85,12 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     write_something_to_buffer(small_buf, len);
     syscall_count++;
     WRITE_FILE_UNLOCK();
+  }
+
+  if(record_partial_flag == 0){
+    if(should_real_dump_file){
+      printk("should? %s",small_buf);
+    }
     try_dump_real_buffer();
   }
 }
