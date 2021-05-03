@@ -185,7 +185,7 @@ int close_handle(struct handler_args* _handler_args) {
   sprintf(_handler_args->small_buf, "pid=%d, close, fd=%d, res=%d\n",
           current->pid, (int)_handler_args->saved_entry->arg0,
           (int)_handler_args->ret);
-  return 0;
+  return -1;
 }
 
 int tgkill_handle(struct handler_args* _handler_args) {

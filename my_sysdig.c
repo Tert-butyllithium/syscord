@@ -47,6 +47,7 @@ static int __init my_sysdig_init(void) {
   open_record_file("/etc/syscall-record/record");
   spin_lock_init(&buf_lock);
   spin_lock_init(&hashtable_lock);
+  spin_lock_init(&try_dump_real_file_lock);
 
   register_syscall_hook();
   // then print out the filter condition
