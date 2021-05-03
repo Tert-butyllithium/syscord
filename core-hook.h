@@ -15,7 +15,7 @@
 #include "syscalls/handlers.h"
 #define TRACEPOINT_PROBE(probe, args...) static void probe(void *__data, args)
 
-spinlock_t small_buf_lock;
+spinlock_t buf_lock;
 spinlock_t hashtable_lock;
 u64 buf_offset = 0;
 u64 syscall_count = 0;
@@ -36,14 +36,14 @@ TRACEPOINT_PROBE(syscall_enter_probe, struct pt_regs *regs, long id) {
   }
 
 #ifdef ENABLE_LOCK
-  spin_lock_irq(&hashtable_lock);
+  spin_lock(&hashtable_lock);
 #endif
   // write_something_to_buffer(small_buf, len);
   hashtable_put(&proc_arg0_hash_table, current->pid,
                 (HASH_TABLE_ENTER){id, get_arg0(regs), get_arg1(regs)});
   syscall_count++;
 #ifdef ENABLE_LOCK
-  spin_unlock_irq(&hashtable_lock);
+  spin_unlock(&hashtable_lock);
 #endif
 }
 
@@ -55,13 +55,14 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
   int record_partial_flag = 0;
   // char *name = get_process_name();
   unsigned long len;
+  // bool should_write_flag = false;
 
   if (check_proc(pid, proc_name, ppid, parent_proc_name) == 0) {
     return;
   }
 
 #ifdef ENABLE_LOCK
-  spin_lock_irq(&hashtable_lock);
+  spin_lock(&hashtable_lock);
 #endif
   // get the info from hash table
   _handler_args.saved_entry =
@@ -72,7 +73,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
 
   // gen_record_str(small_buf, regs, syscall_no, arg0);
 #ifdef ENABLE_LOCK
-  spin_unlock_irq(&hashtable_lock);
+  spin_unlock(&hashtable_lock);
 #endif
 
   record_partial_flag = gen_record_str(&_handler_args);
@@ -82,7 +83,6 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
     if (!check_offset(len)) {
       dump_to_file();
     }
-
     write_something_to_buffer(small_buf, len);
     syscall_count++;
     WRITE_FILE_UNLOCK();

@@ -45,7 +45,7 @@ static void __exit my_sysdig_exit(void) {
 static int __init my_sysdig_init(void) {
   init_syscall_id_handlers();
   open_record_file("/etc/syscall-record/record");
-  spin_lock_init(&small_buf_lock);
+  spin_lock_init(&buf_lock);
   spin_lock_init(&hashtable_lock);
 
   register_syscall_hook();

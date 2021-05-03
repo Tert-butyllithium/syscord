@@ -5,10 +5,10 @@
 #include <linux/device.h>
 #include <linux/fs.h>
 #include <linux/mutex.h>
-#define WRITE_FILE_LOCK() mutex_lock(&file_write_mutex)
-#define WRITE_FILE_UNLOCK() mutex_unlock(&file_write_mutex)
+#define WRITE_FILE_LOCK() spin_lock(&buf_lock)
+#define WRITE_FILE_UNLOCK() spin_unlock(&buf_lock)
 static struct file* __file_to_record = NULL;
-struct mutex file_write_mutex;
+// struct mutex file_write_mutex;
 
 
 struct file* file_open(const char* path, int flags, int rights) {
@@ -18,7 +18,7 @@ struct file* file_open(const char* path, int flags, int rights) {
   int err = 0;
 
   // init mutex for write file
-  mutex_init(&file_write_mutex);
+  // mutex_init(&file_write_mutex);
 
   oldfs = get_fs();
   set_fs(KERNEL_DS);
