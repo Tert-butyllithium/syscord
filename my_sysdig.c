@@ -24,11 +24,33 @@ module_param(parent_proc_name, charp, 0660);
 #include "core-hook.h"
 
 #define _DEBUG_LANRAN_
+#define RECORD_PATH "/etc/syscall-record/record"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Huana Liu");
 MODULE_DESCRIPTION("A Linux kenrel module for capturing syscalls");
 MODULE_VERSION("0.01");
+
+static void init_files(void) {
+  int i = 0;
+  char tmp[64];
+  open_record_file(RECORD_PATH);
+
+  for (; i < 10; i++) {
+    sprintf(tmp, "%s__%02d", RECORD_PATH, i);
+    __file_to_records[i] = file_open(tmp, O_RDWR | O_CREAT, S_IRWXU);
+  }
+}
+
+static void close_files(void) {
+  int i = 0;
+  transfer_to_real_of_real_buffer();
+  dump_real_of_real_buffer();
+  close_record_file();
+  for (; i < 10; i++) {
+    filp_close(__file_to_records[i], NULL);
+  }
+}
 
 static void __exit my_sysdig_exit(void) {
   printk("statistics: %llu\n", syscall_count);
@@ -36,15 +58,15 @@ static void __exit my_sysdig_exit(void) {
 #ifdef MYSYSDIG_DEBUG
   dump_buffer();
 #endif
-  transfer_to_real_of_real_buffer();
+  close_files();
   cleanup();
-  close_record_file();
   printk("[my_sysdig:] remove my_sysdig successfully");
 }
 
 static int __init my_sysdig_init(void) {
   init_syscall_id_handlers();
-  open_record_file("/etc/syscall-record/record");
+  init_files();
+  mutex_init(&file_write_mutex);
   spin_lock_init(&buf_lock);
   spin_lock_init(&hashtable_lock);
   spin_lock_init(&try_dump_real_file_lock);

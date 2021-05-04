@@ -19,7 +19,6 @@
 #define PAGE_ORDER 2
 /* this value can get from PAGE_ORDER */
 #define PAGES_NUMBER 4
-#define BUF_SIZE (1024 * 1024 * 16)  // 16M
 
 char real_buffer[BUF_SIZE];
 char real_of_real_buffer[BUF_SIZE];
@@ -51,6 +50,7 @@ static inline void dump_real_of_real_buffer(void) {
 
 static inline void try_dump_real_buffer(void) {
   if (should_real_dump_file) {
+    // !!! spin_lock seems work on x86
     spin_lock(&try_dump_real_file_lock);
     if (should_real_dump_file) {
       should_real_dump_file = false;

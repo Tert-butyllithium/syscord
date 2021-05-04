@@ -8,11 +8,13 @@
 #define WRITE_FILE_LOCK() spin_lock(&buf_lock)
 #define WRITE_FILE_UNLOCK() spin_unlock(&buf_lock)
 static struct file* __file_to_record = NULL;
-// struct mutex file_write_mutex;
+static struct file* __file_to_records[10];
+spinlock_t buf_lock;
+struct mutex file_write_mutex;
 
+#define BUF_SIZE (1024 * 1024 * 32)
 
 struct file* file_open(const char* path, int flags, int rights) {
-
   struct file* filp = NULL;
   mm_segment_t oldfs;
   int err = 0;
@@ -53,7 +55,23 @@ int file_write(struct file* file, const char* data, unsigned int size) {
 }
 
 static void save_to_file(const char* src, const u32 len) {
-  file_write(__file_to_record, src, len);
+  static unsigned long times = 0;
+  static long index = -1;
+  // static const unsigned long LIMIT = (1UL << 31) / BUF_SIZE - 1;
+  static const unsigned long LIMIT = 3;
+  times++;
+  printk("times: %ld, index: %ld", times, index);
+  if (times >= LIMIT) {
+    index++;
+    times = 0;
+  }
+  if (index == -1) {
+    // printk("write to file: %p",__file_to_record);
+    file_write(__file_to_record, src, len);
+  } else {
+    // printk("write to file: %p",__file_to_records[index]);
+    file_write(__file_to_records[index], src, len);
+  }
 }
 
 #endif
