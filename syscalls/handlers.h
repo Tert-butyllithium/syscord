@@ -225,7 +225,7 @@ int ppoll_handle(struct handler_args* _handler_args) {
   // revents=%hd\n",
   //         current->pid, fd, fds2[2], fds2[3]);
   sprintf(_handler_args->small_buf, "pid=%d, ppoll\n", current->pid);
-  return 0;
+  return 1;
 }
 
 int dup_handle(struct handler_args* _handler_args) {
