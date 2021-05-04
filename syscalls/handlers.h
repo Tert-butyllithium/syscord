@@ -149,7 +149,7 @@ int read_handle(struct handler_args* _handler_args) {
           "pid=%d, read, fd=%d, size=%ld, res=%ld, data%s=%s\n", current->pid,
           fd, count, _handler_args->ret,
           (_handler_args->ret > ARGS_BUF_SIZE ? "(part)" : ""), buf_tmp);
-  return 0;
+  return 1;
 #else
   sprintf(_handler_args->small_buf,
           "pid=%d, read, fd=%d, size=%ld, res=%ld, data=", current->pid, fd,
