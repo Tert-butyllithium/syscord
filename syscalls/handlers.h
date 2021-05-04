@@ -282,7 +282,7 @@ int openat_handle(struct handler_args* _handler_args) {
           "pid=%d, openat, dir=%d, path=%s, flags=%d, mode=%u, "
           "res=%d\n",
           current->pid, dirfd, buf_tmp, flags, mode, (int)_handler_args->ret);
-  return 0;
+  return 1;
 }
 
 int writev_handle(struct handler_args* _handler_args){
