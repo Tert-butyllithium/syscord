@@ -57,8 +57,8 @@ int file_write(struct file* file, const char* data, unsigned int size) {
 static void save_to_file(const char* src, const u32 len) {
   static unsigned long times = 0;
   static long index = -1;
-  // static const unsigned long LIMIT = (1UL << 31) / BUF_SIZE - 1;
-  static const unsigned long LIMIT = 3;
+  static const unsigned long LIMIT = (1UL << 31) / BUF_SIZE - 1;
+  // static const unsigned long LIMIT = 3;
   times++;
   printk("times: %ld, index: %ld", times, index);
   if (times >= LIMIT) {
