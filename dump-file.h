@@ -46,7 +46,7 @@ int file_write(struct file* file, const char* data, unsigned int size) {
   // set_fs(get_ds());
   set_fs(KERNEL_DS);
 
-  ret = kernel_write(file, data, size, &__file_to_record->f_pos);
+  ret = kernel_write(file, data, size, &file->f_pos);
 
   set_fs(oldfs);
   return ret;
