@@ -4,7 +4,7 @@
 #include "__x86_64.h"
 #include "handlers-table.h"
 #include "handlers.h"
-
+#include "__fast_sprintf.h"
 
 
 inline unsigned long get_arg0(struct pt_regs* regs) {
@@ -78,6 +78,21 @@ inline unsigned long get_arg5(struct pt_regs* regs) {
   return -1;
 #endif
 }
+
+
+inline unsigned long get_return_address(struct pt_regs* regs) {
+#ifdef CONFIG_X86
+// NOT IMPLEMENTED FOR x86
+  return 0;
+#elif defined(CONFIG_ARM64)
+  return regs->regs[30];
+#elif defined(CONFIG_RISCV)
+  return regs->ra;
+#else
+  return -1;
+#endif
+}
+
 
 extern char syscall_id_to_name[][32];
 extern handler_callback syscall_id_handlers[512];
