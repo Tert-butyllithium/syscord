@@ -24,14 +24,15 @@ inline void assemble_buf_arg(char* tmp_buf, const void* buf_addr,
                              const size_t len) {
   size_t tmp = min(len, (size_t)ARGS_BUF_SIZE);
   // NOTE: the buf_addr pointer a user address...
-  strncpy_from_user(tmp_buf, buf_addr, tmp);
+  copy_from_user(tmp_buf, buf_addr, tmp);
+  
   tmp_buf[tmp] = '\0';
 }
 
 inline void assemble_struct_arg(void* dst_struct, const void* src_struct,
                                 const size_t len) {
   // NOTE: the buf_addr pointer a user address...
-  strncpy_from_user(dst_struct, src_struct, len);
+  copy_from_user(dst_struct, src_struct, len);
 }
 
 inline int default_handle(struct handler_args* _handler_args) {

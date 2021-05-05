@@ -38,7 +38,7 @@ static void transfer_to_real_of_real_buffer(void) {
   //     "it is time to dump records to file with offset: %ld, current stat:
   //     %lld", real_offset, syscall_count);
   // save_to_file(real_buffer, real_offset);
-  strncpy(real_of_real_buffer, real_buffer, real_offset);
+  memcpy(real_of_real_buffer, real_buffer, real_offset);
   real_of_real_length = real_offset;
   should_real_dump_file = true;
   real_offset = 0;
@@ -63,7 +63,7 @@ static inline void try_dump_real_buffer(void) {
 static void write_something_to_buffer(const char* src,
                                       const unsigned long str_len) {
   unsigned long offset_end = real_offset + str_len;
-  strncpy(real_buffer + real_offset, src, str_len);
+  memcpy(real_buffer + real_offset, src, str_len);
   real_offset = offset_end;
 }
 
@@ -71,7 +71,7 @@ static void __attribute__((unused))
 write_something_to_buffer_from_user(const char* src,
                                     const unsigned long str_len) {
   unsigned long offset_end = real_offset + str_len;
-  strncpy_from_user(real_buffer + real_offset, src, str_len);
+  copy_from_user(real_buffer + real_offset, src, str_len);
   real_offset = offset_end;
 }
 
