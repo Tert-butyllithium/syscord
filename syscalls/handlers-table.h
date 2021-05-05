@@ -5,19 +5,20 @@ extern char syscall_id_to_name[][32];
 
 typedef int (*handler_callback)(struct handler_args*);
 handler_callback functions[] = {
-    &getuid_handle, &recvfrom_handle, &socket_handle, &fstat_handle,
-    &getcwd_handle, &lseek_handle,    &futex_handle,  &sendto_handle,
-    &clone_handle,  &read_handle,     &mmap_handle,   &exit_group_handle,
-    &close_handle,  &tgkill_handle,   &munmap_handle, &nanosleep_handle,
-    &ppoll_handle,  &dup_handle,      &ioctl_handle,  &open_handle,
-    &creat_handle,  &openat_handle,   &close_handle,  &write_handle,
+    &getuid_handle, &recvfrom_handle, &socket_handle,    &fstat_handle,
+    &getcwd_handle, &lseek_handle,    &futex_handle,     &sendto_handle,
+    &clone_handle,  &read_handle,     &mmap_handle,      &exit_group_handle,
+    &tgkill_handle, &munmap_handle,   &nanosleep_handle, &ppoll_handle,
+    &dup_handle,    &ioctl_handle,    &open_handle,      &creat_handle,
+    &openat_handle, &close_handle,    &write_handle,     &write_handle,
     &write_handle};
 
 char handler_string[][32] = {
-    "getuid", "recvfrom",  "socket", "fstat", "getcwd",     "lseek", "futex",
-    "sendto", "clone",     "read",   "mmap",  "exit_group", "close", "tgkill",
-    "munmap", "nanosleep", "ppoll",  "dup",   "ioctl",      "open",  "creat",
-    "openat", "close",     "writev", "write"};
+    "getuid", "recvfrom",   "socket", "fstat",  "getcwd",
+    "lseek",  "futex",      "sendto", "clone",  "read",
+    "mmap",   "exit_group", "tgkill", "munmap", "nanosleep",
+    "ppoll",  "dup",        "ioctl",  "open",   "creat",
+    "openat", "close",      "writev", "write",  "epoll_pwait"};
 
 handler_callback syscall_id_handlers[512];
 
