@@ -12,7 +12,7 @@ static struct file* __file_to_records[10];
 spinlock_t buf_lock;
 struct mutex file_write_mutex;
 
-#define BUF_SIZE (1024 * 1024 * 32)
+#define BUF_SIZE (1024 * 1024 * 16)
 
 struct file* file_open(const char* path, int flags, int rights) {
   struct file* filp = NULL;
