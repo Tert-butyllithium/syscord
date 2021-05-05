@@ -287,7 +287,7 @@ int openat_handle(struct handler_args* _handler_args) {
   return 1;
 }
 
-int writev_handle(struct handler_args* _handler_args){
+int write_handle(struct handler_args* _handler_args){
   default_handle(_handler_args);
   return 1;
 }
