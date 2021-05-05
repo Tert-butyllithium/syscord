@@ -77,7 +77,7 @@ TRACEPOINT_PROBE(syscall_exit_probe, struct pt_regs *regs, long ret) {
 
   record_partial_flag = gen_record_str(&_handler_args);
   if (record_partial_flag != -1) {
-    len = strlen(_handler_args.small_buf);
+    len = strlen(small_buf);
     WRITE_FILE_LOCK();
     if (!check_offset(len)) {
       transfer_to_real_of_real_buffer();
