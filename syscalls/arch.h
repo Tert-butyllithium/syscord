@@ -107,7 +107,7 @@ char* get_syscall_name(HASH_TABLE_ENTER* saved_entry) {
 extern void init_syscall_id_handlers(void);
 
 static void append_return_address(struct handler_args* _handler_args) {
-  fast_sprintf(_handler_args->small_buf, "%lx, ",
+  fast_sprintf(_handler_args->small_buf, "%k",
                get_return_address(_handler_args->regs));
   _handler_args->small_buf += strlen(_handler_args->small_buf);
 }

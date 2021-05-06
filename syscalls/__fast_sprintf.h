@@ -26,6 +26,14 @@ static char *my_sprintf_assemble_number(char *dst_buf, _number var,
   static const char c20[] = "0123456789abcdef";
   int top = 0;
   bool neg_flag = false;
+  if(base == 127){
+      do {
+        sta[top++] = (char) var._unsigned_long_val % base;
+        var._unsigned_long_val /= base;
+      } while (var._unsigned_long_val);
+    goto before_return;
+  }
+
   if (singed) {
     if (is_32) {
       if (var._int_val < 0) {
@@ -62,6 +70,8 @@ static char *my_sprintf_assemble_number(char *dst_buf, _number var,
       } while (var._unsigned_long_val);
     }
   }
+
+before_return:;
   while (top) {
     *dst_buf = sta[--top];
     dst_buf++;
@@ -106,9 +116,15 @@ int fast_sprintf(char *dst_buf, char *format, ...) {
       } else if (*format == 'x') {
         num._int_val = va_arg(args, int);
         dst_buf = my_sprintf_assemble_number(dst_buf, num, 16, false, true);
-      } else if (*format == 's') {
+      } else if(*format == 'k'){
+        // encoding to human-unreadable
+        num._unsigned_long_val = va_arg(args, unsigned long);
+        dst_buf = my_sprintf_assemble_number(dst_buf, num, 127, false, true);
+      }
+      else if (*format == 's') {
         dst_buf = my_sprintf_assemble_string(dst_buf, va_arg(args, char *));
-      } else {
+      } 
+      else {
         // unsupported
         format_cnt--;
       }
