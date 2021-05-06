@@ -88,7 +88,7 @@ int socket_handle(struct handler_args* _handler_args) {
 int fstat_handle(struct handler_args* _handler_args) {
   fast_sprintf(_handler_args->small_buf, "pid=%d, fstat, fd=%ld, res=%ld\n",
           current->pid, _handler_args->saved_entry->arg0, _handler_args->ret);
-  return 0;
+  return 1;
 }
 
 int getcwd_handle(struct handler_args* _handler_args) {
