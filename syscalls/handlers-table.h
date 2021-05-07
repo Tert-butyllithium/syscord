@@ -11,7 +11,7 @@ handler_callback functions[] = {
     &tgkill_handle, &munmap_handle,   &nanosleep_handle, &ppoll_handle,
     &dup_handle,    &ioctl_handle,    &open_handle,      &creat_handle,
     &openat_handle, &close_handle,    &write_handle,     &write_handle,
-    &write_handle, &write_handle};
+    &write_handle, &write_handle, &write_handle};
 
 char handler_string[][32] = {
     "getuid", "recvfrom",   "socket", "fstat",  "getcwd",
