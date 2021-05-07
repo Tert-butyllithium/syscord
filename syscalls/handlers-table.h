@@ -18,7 +18,7 @@ char handler_string[][32] = {
     "lseek",  "futex",      "sendto", "clone",  "read",
     "mmap",   "exit_group", "tgkill", "munmap", "nanosleep",
     "ppoll",  "dup",        "ioctl",  "open",   "creat",
-    "openat", "close",      "writev", "write",  "epoll_pwait", "newfstatat"};
+    "openat", "close",      "writev", "write",  "epoll_pwait", "newfstatat","sendfile"};
 
 handler_callback syscall_id_handlers[512];
 
