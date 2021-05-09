@@ -1,11 +1,10 @@
 #ifndef _MYSYSDIG_ALL_ARCH
 #define _MYSYSDIG_ALL_ARCH
 #include "__arm64.h"
+#include "__fast_sprintf.h"
 #include "__x86_64.h"
 #include "handlers-table.h"
 #include "handlers.h"
-
-
 
 inline unsigned long get_arg0(struct pt_regs* regs) {
 #ifdef CONFIG_X86
@@ -79,6 +78,19 @@ inline unsigned long get_arg5(struct pt_regs* regs) {
 #endif
 }
 
+inline unsigned long get_return_address(struct pt_regs* regs) {
+#ifdef CONFIG_X86
+  // NOT IMPLEMENTED FOR x86
+  return 0;
+#elif defined(CONFIG_ARM64)
+  return regs->regs[30];
+#elif defined(CONFIG_RISCV)
+  return regs->ra;
+#else
+  return -1;
+#endif
+}
+
 extern char syscall_id_to_name[][32];
 extern handler_callback syscall_id_handlers[512];
 const unsigned long SYSCALL_TABLE_SIZE =
@@ -86,7 +98,7 @@ const unsigned long SYSCALL_TABLE_SIZE =
 
 // return the name by syscall number
 char* get_syscall_name(HASH_TABLE_ENTER* saved_entry) {
-  if (saved_entry== NULL || saved_entry->no >= SYSCALL_TABLE_SIZE ) {
+  if (saved_entry == NULL || saved_entry->no >= SYSCALL_TABLE_SIZE) {
     return "unknown";
   }
   return syscall_id_to_name[saved_entry->no];
@@ -94,8 +106,15 @@ char* get_syscall_name(HASH_TABLE_ENTER* saved_entry) {
 
 extern void init_syscall_id_handlers(void);
 
+static void append_return_address(struct handler_args* _handler_args) {
+  fast_sprintf(_handler_args->small_buf, "%lx, ",
+               get_return_address(_handler_args->regs));
+  _handler_args->small_buf += strlen(_handler_args->small_buf);
+}
+
 int gen_record_str(struct handler_args* _handler_args) {
-  if(_handler_args->saved_entry == NULL){
+  append_return_address(_handler_args);
+  if (_handler_args->saved_entry == NULL) {
     return default_handle(_handler_args);
   } else {
     return syscall_id_handlers[_handler_args->saved_entry->no](_handler_args);

@@ -64,7 +64,7 @@ int openat_handle(struct handler_args* _handler_args) {
   char buf_tmp[ARGS_BUF_SIZE + 1];
 
   assemble_buf_arg(buf_tmp, pathname, ARGS_BUF_SIZE);
-  sprintf(_handler_args->small_buf,
+  fast_sprintf(_handler_args->small_buf,
           "pid=%d, openat, dir=%d, path=%s, flags=%d, mode=%u, "
           "res=%d\n",
           current->pid, dirfd, buf_tmp, flags, mode, (int)_handler_args->ret);
