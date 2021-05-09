@@ -1,14 +1,14 @@
-# My sysdig
+# Syscord
 
-> The *goal* of this project is to create another `sysdig` ~~(although impossible)~~
+> The *goal* of this project is to record syscall
 
-[Sysdig](https://github.com/draios/sysdig) is an awesome tool for capturing syscalls; however, it is too complex and not very suitable for `arm` devices (especially for developing board without package manager)
+[Sysdig](https://github.com/draios/sysdig) is an awesome tool for capturing syscalls; however, it is too complex and introudces a relatively high overhead.
 
-In our test (the same evluation environment as **Performance Evaluation**), the overall overhead could reach up to **15%**!!!
+In our test (the same evluation environment as **Performance Evaluation**), the average overhead of Sysdig could reach up to **15%**!!!
 
-`My sysdig` aims to provide limited features to minimize dependencies and overhead
+`Syscord` aims to provide limited features to minimize dependencies and overhead
 
-> WARNING: Mysysdig is a developing project and all functions have not been fully tested.
+> WARNING: Mysysdig is still a developing project and all functions have not been fully tested.
 
 ## User Manual 
 
