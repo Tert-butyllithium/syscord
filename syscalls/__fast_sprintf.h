@@ -1,5 +1,5 @@
-#ifndef MYSYSDIG_FAST_SPRINTF_H
-#define MYSYSDIG_FAST_SPRINTF_H
+#ifndef SYSCORD_FAST_SPRINTF_H
+#define SYSCORD_FAST_SPRINTF_H
 #include <stdarg.h>
 
 static char *my_sprintf_assemble_string(char *dst_buf, const char *str) {

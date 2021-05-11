@@ -52,18 +52,18 @@ static void close_files(void) {
   }
 }
 
-static void __exit my_sysdig_exit(void) {
+static void __exit syscord_exit(void) {
   printk("statistics: %llu\n", syscall_count);
   printk("saving to file...with length: %lu", real_offset);
-#ifdef MYSYSDIG_DEBUG
+#ifdef SYSCORD_DEBUG
   dump_buffer();
 #endif
   close_files();
   cleanup();
-  printk("[my_sysdig:] remove my_sysdig successfully");
+  printk("[syscord:] remove syscord successfully");
 }
 
-static int __init my_sysdig_init(void) {
+static int __init syscord_init(void) {
   init_syscall_id_handlers();
   init_files();
   mutex_init(&file_write_mutex);
@@ -73,12 +73,12 @@ static int __init my_sysdig_init(void) {
 
   register_syscall_hook();
   // then print out the filter condition
-  printk(KERN_INFO "[my_sysdig:] pid=%d and proc_name=%s", pid, proc_name);
-  printk(KERN_INFO "[my_sysdig:] load successfully!");
+  printk(KERN_INFO "[syscord:] pid=%d and proc_name=%s", pid, proc_name);
+  printk(KERN_INFO "[syscord:] load successfully!");
 
   return 0;
 }
 
-module_init(my_sysdig_init);
-module_exit(my_sysdig_exit);
+module_init(syscord_init);
+module_exit(syscord_exit);
 MODULE_LICENSE("GPL");

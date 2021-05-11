@@ -8,11 +8,11 @@ In our test (the same evluation environment as **Performance Evaluation**), the 
 
 `Syscord` aims to provide limited features to minimize dependencies and overhead
 
-> WARNING: Mysysdig is still a developing project and all functions have not been fully tested.
+> WARNING: Syscord is still a developing project and all functions have not been fully tested.
 
 ## User Manual 
 
-Basically, you can `make` to compile the driver and then `insmod my_sysdig.ko` to install the kernel module. 
+Basically, you can `make` to compile the driver and then `insmod syscord.ko` to install the kernel module. 
 
 Then you could open file `/etc/syscall-record/record` to find all syscall logs. (You might need to create the directory and delete the file before run)
 
@@ -33,8 +33,8 @@ pid=22569, epoll_ctl, res=0
 
 ### Filter condition
 
-- `pid`: `insmod my_sysdig.ko pid=1234`
-- `proc_name`: `insmod my_sysdig.ko proc_name=test_syscall`
+- `pid`: `insmod syscord.ko pid=1234`
+- `proc_name`: `insmod syscord.ko proc_name=test_syscall`
 - `ppid`: the parent pid
 - `parent_proc_name`: the process name of parent
 
@@ -50,7 +50,7 @@ By default, we defined a marco named `TRUNCATE_CONTENT_RECORD` at `syscalls/hand
 
 ## Handlers for different type of syscalls
 
-handler function are defined in the end of `syscalls/handlers.h`. To regitser it to let `Mysysdig` know, relavant codes are defined in `syscalls/handlers-table.h`
+handler function are defined in the end of `syscalls/handlers.h`. To regitser it to let `Syscord` know, relavant codes are defined in `syscalls/handlers-table.h`
 
 For example `openat_handle` to handle the syscall `openat` 
 

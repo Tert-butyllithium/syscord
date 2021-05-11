@@ -1,7 +1,7 @@
 // reference: https://gist.github.com/HugoGuiroux/0894091275169750d22f
 // reference: sysdig
-#ifndef _MYSISDIG_CORE_HOOK_H
-#define _MYSISDIG_CORE_HOOK_H
+#ifndef _SYSCORD_CORE_HOOK_H
+#define _SYSCORD_CORE_HOOK_H
 #define ENABLE_LOCK
 #include <linux/slab.h>
 #include <linux/time.h>

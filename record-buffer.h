@@ -1,5 +1,5 @@
-#ifndef _MYSISDIG_RECORD_BUFFER_H
-#define _MYSISDIG_RECORD_BUFFER_H
+#ifndef _SYSCORD_RECORD_BUFFER_H
+#define _SYSCORD_RECORD_BUFFER_H
 #include <linux/fs.h>
 #include <linux/mm.h>
 #include <linux/module.h>

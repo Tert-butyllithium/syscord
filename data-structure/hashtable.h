@@ -1,5 +1,5 @@
-#ifndef MYSYSDIG_DS_HASHTABLE_H
-#define MYSYSDIG_DS_HASHTABLE_H
+#ifndef SYSCORD_DS_HASHTABLE_H
+#define SYSCORD_DS_HASHTABLE_H
 #define HASH_TABLE_ENTER struct __syscall_no_and_arg0
 #include "bitset.h"
 #include "../syscalls/hashtable-entry.h"

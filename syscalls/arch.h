@@ -1,5 +1,5 @@
-#ifndef _MYSYSDIG_ALL_ARCH
-#define _MYSYSDIG_ALL_ARCH
+#ifndef _SYSCORD_ALL_ARCH
+#define _SYSCORD_ALL_ARCH
 #include "__arm64.h"
 #include "__fast_sprintf.h"
 #include "__x86_64.h"

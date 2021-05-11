@@ -1,5 +1,5 @@
-#ifndef MYSYSDIG_HANDLERS_TABLE_H
-#define MYSYSDIG_HANDLERS_TABLE_H
+#ifndef SYSCORD_HANDLERS_TABLE_H
+#define SYSCORD_HANDLERS_TABLE_H
 #include "handlers.h"
 extern char syscall_id_to_name[][32];
 
@@ -26,12 +26,12 @@ void init_syscall_id_handlers(void) {
       sizeof(syscall_id_to_name) / sizeof(syscall_id_to_name[0]);
   const static size_t HANDLER_TABLE_SIZE =
       sizeof(handler_string) / sizeof(handler_string[0]);
-  printk("[my_sysdig:] These following syscalls have been special handled");
+  printk("[syscord:] These following syscalls have been special handled");
   for (i = 0; i < SYSCALL_TABLE_SIZE; i++) {
     for (j = 0; j < HANDLER_TABLE_SIZE; j++) {
       if (strcmp(syscall_id_to_name[i], handler_string[j]) == 0) {
         syscall_id_handlers[i] = functions[j];
-        printk("[my_sysdig:] %d:%s - %pF", i, syscall_id_to_name[i],
+        printk("[syscord:] %d:%s - %pF", i, syscall_id_to_name[i],
                functions[j]);
         goto next_label;
       }

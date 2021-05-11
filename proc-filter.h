@@ -1,5 +1,5 @@
-#ifndef _MYSISDIG_PROC_FILTER_H
-#define _MYSISDIG_PROC_FILTER_H
+#ifndef _SYSCORD_PROC_FILTER_H
+#define _SYSCORD_PROC_FILTER_H
 #include <linux/sched.h>
 
 const size_t MAX_STR_LENGTH = 15;

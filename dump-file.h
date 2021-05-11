@@ -1,5 +1,5 @@
-#ifndef _MYSISDIG_DUMP_FILE_H
-#define _MYSISDIG_DUMP_FILE_H
+#ifndef _SYSCORD_DUMP_FILE_H
+#define _SYSCORD_DUMP_FILE_H
 #include <asm/io.h>
 #include <linux/buffer_head.h>
 #include <linux/device.h>
