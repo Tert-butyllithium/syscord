@@ -45,6 +45,9 @@ static void transfer_to_real_of_real_buffer(void) {
 }
 
 static inline void dump_real_of_real_buffer(void) {
+  printk(
+      "it is time to dump records to file with offset: %ld, current stat: %lld",
+      real_offset, syscall_count);
   save_to_file(real_of_real_buffer, real_of_real_length);
 }
 
