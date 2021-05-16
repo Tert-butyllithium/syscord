@@ -72,23 +72,35 @@ int openat_handle(struct handler_args* _handler_args) {
 }
 ```
 
-There are two tables in `handlers-table.h` are corresponded to register these handlers. The table also shows all types of syscalls are special treated.
+To bild handlers for specific syscalls, append relevant `BIND_HANDLER` in `void __bind_handlers(void)`
 
 ```c
-typedef int (*handler_callback)(struct handler_args*);
-handler_callback functions[] = {
-    &getuid_handle, &recvfrom_handle, &socket_handle, &fstat_handle,
-    &getcwd_handle, &lseek_handle,    &futex_handle,  &sendto_handle,
-    &clone_handle,  &read_handle,     &mmap_handle,   &exit_group_handle,
-    &close_handle,  &tgkill_handle,   &munmap_handle, &nanosleep_handle,
-    &ppoll_handle,  &dup_handle,      &ioctl_handle,  &open_handle,
-    &creat_handle,  &openat_handle};
-
-char handler_string[][32] = {
-    "getuid", "recvfrom", "socket", "fstat",     "getcwd", "lseek",
-    "futex",  "sendto",   "clone",  "read",      "mmap",   "exit_group",
-    "close",  "tgkill",   "munmap", "nanosleep", "ppoll",  "dup",
-    "ioctl",  "open",     "creat",  "openat"};
+void __bind_handlers(void) {
+  BIND_HANDLER("getuid", &getuid_handle);
+  BIND_HANDLER("recvfrom", &recvfrom_handle);
+  BIND_HANDLER("socket", &socket_handle);
+  BIND_HANDLER("fstat", &fstat_handle);
+  BIND_HANDLER("getcwd", &getcwd_handle);
+  BIND_HANDLER("lseek", &lseek_handle);
+  BIND_HANDLER("futex", &futex_handle);
+  BIND_HANDLER("sendto", &sendto_handle);
+  BIND_HANDLER("clone", &clone_handle);
+  BIND_HANDLER("read", &read_handle);
+  BIND_HANDLER("mmap", &mmap_handle);
+  BIND_HANDLER("exit_group", &exit_group_handle);
+  BIND_HANDLER("close", &close_handle);
+  BIND_HANDLER("tgkill", &tgkill_handle);
+  BIND_HANDLER("munmap", &munmap_handle);
+  BIND_HANDLER("nanosleep", &nanosleep_handle);
+  BIND_HANDLER("ppoll", &ppoll_handle);
+  BIND_HANDLER("dup", &dup_handle);
+  BIND_HANDLER("ioctl", &ioctl_handle);
+  BIND_HANDLER("open", &open_handle);
+  BIND_HANDLER("creat", &creat_handle);
+  BIND_HANDLER("openat", &openat_handle);
+  BIND_HANDLER("close", &close_handle);
+  BIND_HANDLER("writev", &writev_handle);
+}
 ```
 
 
