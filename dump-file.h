@@ -8,7 +8,7 @@
 #define WRITE_FILE_LOCK() spin_lock(&buf_lock)
 #define WRITE_FILE_UNLOCK() spin_unlock(&buf_lock)
 static struct file* __file_to_record = NULL;
-static struct file* __file_to_records[10];
+// static struct file* __file_to_records[10];
 spinlock_t buf_lock;
 struct mutex file_write_mutex;
 
@@ -37,7 +37,8 @@ void close_record_file(void) { filp_close(__file_to_record, NULL); }
 
 static void open_record_file(const char* file_name) {
   // __file_to_record = filp_open(file_name, O_RDWR | O_CREAT, S_IRWXU);
-  __file_to_record = file_open(file_name, O_RDWR | O_CREAT, S_IRWXU);
+  __file_to_record =
+      file_open(file_name, O_RDWR | O_CREAT | O_LARGEFILE, S_IRWXU);
 }
 
 int file_write(struct file* file, const char* data, unsigned int size) {
@@ -65,13 +66,13 @@ static void save_to_file(const char* src, const u32 len) {
     index++;
     times = 0;
   }
-  if (index == -1) {
+  // if (index == -1) {
     // printk("write to file: %p",__file_to_record);
     file_write(__file_to_record, src, len);
-  } else {
-    // printk("write to file: %p",__file_to_records[index]);
-    file_write(__file_to_records[index], src, len);
-  }
+  // } else {
+  //   // printk("write to file: %p",__file_to_records[index]);
+  //   file_write(__file_to_records[index], src, len);
+  // }
 }
 
 #endif

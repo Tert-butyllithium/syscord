@@ -32,24 +32,13 @@ MODULE_DESCRIPTION("A Linux kenrel module for capturing syscalls");
 MODULE_VERSION("0.01");
 
 static void init_files(void) {
-  int i = 0;
-  char tmp[64];
   open_record_file(RECORD_PATH);
-
-  for (; i < 10; i++) {
-    sprintf(tmp, "%s__%02d", RECORD_PATH, i);
-    __file_to_records[i] = file_open(tmp, O_RDWR | O_CREAT, S_IRWXU);
-  }
 }
 
 static void close_files(void) {
-  int i = 0;
   transfer_to_real_of_real_buffer();
   dump_real_of_real_buffer();
   close_record_file();
-  for (; i < 10; i++) {
-    filp_close(__file_to_records[i], NULL);
-  }
 }
 
 static void __exit syscord_exit(void) {
